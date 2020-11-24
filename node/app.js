@@ -1,5 +1,8 @@
 const http = require('http');
 const fs = require('fs');
+const mysql = require('mysql');
+//const spyros = require('./dbhandler.js');
+const db = require('./verify.js');
 
 const hostname = '0.0.0.0';
 const port = 80;
@@ -13,6 +16,20 @@ const client = new CoinMarketCap(apiKey)
 client.getQuotes({symbol: ['BTC', 'ETH']}).then(console.log).catch(console.error)
 */
 
+const server = http.createServer((req,res) => {
+	res.statusCode = 200;
+	res.setHeader('Content-Type','text/plain');
+	res.write("Spyros\n");
+	var sql = "SELECT SUM(amount) AS spyros FROM deposits";
+	db.query(sql, function(err,result,fields){
+		if(err) throw err;
+		console.log(result);
+		res.write(result[0].spyros.toString());
+		res.end();
+	});
+});
+
+/*
 const server = http.createServer((req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/html');
@@ -25,7 +42,7 @@ const server = http.createServer((req, res) => {
 	  }
 	  res.end();
   });
-});
+});*/
 
 server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
