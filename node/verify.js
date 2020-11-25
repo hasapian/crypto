@@ -11,4 +11,10 @@ con.connect(function(err) {
   if (err) throw err;
 });
 
+/*
+function getDepositSum(callback) {
+	var sql = "SELECT SUM(amount) as totalDeposits FROM deposits";
+	con.query(sql,callback);
+}*/
+
 module.exports = con;
