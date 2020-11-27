@@ -18,4 +18,9 @@ con.connect(function(err) {
     if (err) throw err;
     console.log(result);
   });
+
+  con.query("INSERT INTO trades (coin,amount) VALUES ('MATIC',171.577275),('RST',94.115574),('VET',134.57037),('BLZ',75.136246);", function (err,result,fields) {
+	  if(err) throw err;
+	  console.log(result);
+  });
 });
