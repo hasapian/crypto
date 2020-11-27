@@ -7,15 +7,15 @@ const port = 80;
 
 
 const CoinMarketCap = require('coinmarketcap-api')
-/* 
+ 
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
-*/
-const price1 = 19057.069470388597;
+
+//const price1 = 19057.069470388597;
 const usdtoeuro = 0.842525;
 const eurotousd = 1.19;
 
-var coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ'];
+const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ'];
 var deposits = [0,0,0,0,0,0,0,0,0];
 var posessions = [0,0,0,0,0,0,0,0,0];
 
@@ -23,7 +23,7 @@ const server = http.createServer((req,res) => {
 	res.statusCode = 200;
 	res.setHeader('Content-Type','text/plain');
 	res.write("Profits:\n");
-//	client.getQuotes({symbol: ['BTC,ETH']}).then((prices) => {
+	client.getQuotes({symbol: ['BTC,ETH,LINK']}).then((prices) => {
 			var sql1 = "SELECT SUM(amount) AS depBTC FROM deposits WHERE coin = '"+coins[0]+"'";
 			var sql2 = "SELECT SUM(amount) AS bitcoin FROM posessions WHERE coin = '"+coins[0]+"'";
 			var sql3 = "SELECT SUM(amount) AS depETH FROM deposits WHERE coin = '"+coins[1]+"'";
@@ -57,23 +57,27 @@ const server = http.createServer((req,res) => {
 							db.query(sql5, function(err,result5,fields5) {
 								if(err) throw err;
 								deposits[2] = result5[0].depLINK;
+								db.query(sql6, function(err,result6,fields6) {
+									if(err) throw err;
+									posessions[2] = result6[0].chainlink;
 
-//					cmcprice = prices.data[coins[i]].quote.USD.price;
-//					res.write(((holdBTC * cmcprice * usdtoeuro) - deposits[0]).toString());
-//					res.write(((holdBTC * price1 * usdtoeuro) - deposits[0]).toString());
-							for(i=0;i<2;i++){					
-								res.write("\nDeposits: "+deposits[i].toString());
-								res.write("\nHoldings: "+posessions[i].toString());
-								res.write("\nPrice: "+price1.toString());
-								res.write("\nProfit: "+((posessions[i] * price1 * usdtoeuro) - deposits[i]).toString());
-								res.write("\n---------");
-								if(i==1) res.end();
-							}
+									for(i=0;i<3;i++){
+										res.write("\n"+coins[i]);
+										res.write("\nDeposits: "+deposits[i].toString());
+										res.write("\nHoldings: "+posessions[i].toString());
+										cmcprice = prices.data[coins[i]].quote.USD.price;
+										res.write("\nPrice: "+cmcprice.toString());
+										res.write("\nProfit: "+((posessions[i] * cmcprice * usdtoeuro) - deposits[i]).toString());
+										res.write("\n---------");
+										if(i==2) res.end();
+									}
+								});
+							});
 						});
 					});
 				});
 			});
-//	}).catch(console.error)
+	}).catch(console.error)
 });
 
 /*
