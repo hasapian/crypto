@@ -1,6 +1,10 @@
 const http = require('http');
 const fs = require('fs');
 const db = require('./verify.js');
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser');
+const app = express();
 
 const hostname = '0.0.0.0';
 const port = 80;
@@ -8,22 +12,26 @@ const port = 80;
 
 const CoinMarketCap = require('coinmarketcap-api')
  
+
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 
+
 //const price1 = 19057.069470388597;
 const usdtoeuro = 0.842525;
-const eurotousd = 1.19;
+const eurotousd = 1.21;
 
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ'];
 var deposits = [0,0,0,0,0,0,0,0,0];
 var posessions = [0,0,0,0,0,0,0,0,0];
 
-const server = http.createServer((req,res) => {
+
+
+app.get('/', (req,res) => {
 	res.statusCode = 200;
-	res.setHeader('Content-Type','text/plain');
-	res.write("Profits:\n");
-	client.getQuotes({symbol: ['BTC,ETH,LINK']}).then((prices) => {
+	res.setHeader('Content-Type','text/html');
+	res.write("<h1>Profits:</h1>\n");
+	client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP']}).then((prices) => {
 			var sql1 = "SELECT SUM(amount) AS depBTC FROM deposits WHERE coin = '"+coins[0]+"'";
 			var sql2 = "SELECT SUM(amount) AS bitcoin FROM posessions WHERE coin = '"+coins[0]+"'";
 			var sql3 = "SELECT SUM(amount) AS depETH FROM deposits WHERE coin = '"+coins[1]+"'";
@@ -57,20 +65,39 @@ const server = http.createServer((req,res) => {
 							db.query(sql5, function(err,result5,fields5) {
 								if(err) throw err;
 								deposits[2] = result5[0].depLINK;
-								db.query(sql6, function(err,result6,fields6) {
+								db.query(sql6, function(err,result6,fields6) {			
 									if(err) throw err;
 									posessions[2] = result6[0].chainlink;
+									db.query(sql7, function(err,result7) {
+										if(err) throw err;
+										deposits[3] = result7[0].depCRO;
+										db.query(sql8, function(err,result8) {
+											if(err) throw err;
+											posessions[3] = result8[0].cro;
+											db.query(sql9, function(err,result9) {
+												if(err) throw err;
+												deposits[4] = result9[0].depSXP;
+												db.query(sql10, function(err,result10) {
+													if (err) throw err;
+													posessions[4] = result10[0].swipe;
 
-									for(i=0;i<3;i++){
+									for(i=0;i<5;i++){
 										res.write("\n"+coins[i]);
-										res.write("\nDeposits: "+deposits[i].toString());
-										res.write("\nHoldings: "+posessions[i].toString());
+										res.write("\nDeposits: "+deposits[i].toString()+"<br>");
+										res.write("\nHoldings: "+posessions[i].toString()+"<br>");
 										cmcprice = prices.data[coins[i]].quote.USD.price;
-										res.write("\nPrice: "+cmcprice.toString());
-										res.write("\nProfit: "+((posessions[i] * cmcprice * usdtoeuro) - deposits[i]).toString());
-										res.write("\n---------");
-										if(i==2) res.end();
+										res.write("\nPrice: "+cmcprice.toString()+"<br>");
+										res.write("\nProfit: "+((posessions[i] * cmcprice * usdtoeuro) - deposits[i]).toString()+"<br>");
+										res.write("\n---------<br>");
+										if(i==4) { 
+											res.write('<a href="\add">Add holdings!</a>');
+											res.end();
+										}
 									}
+												});
+											});
+										});
+									});
 								});
 							});
 						});
@@ -95,7 +122,32 @@ const server = http.createServer((req, res) => {
   });
 });*/
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.get('/add', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/index.html'));
+});
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+app.post('/updateHolding', function(req,res) {
+	cosole.log("Holding updated");
+});
+
+app.post('/insertHolding', function (req,res) {
+	var amount = req.body.hodl;
+	var coin = req.body.coins;
+	console.log("coin: "+coin);
+	console.log("amount: "+amount);
+	var sql = "INSERT INTO posessions (coin,amount) VALUES ('"+coin+"','"+amount+"')"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+		if(err) throw err;
+		console.log("New holding has been added");
+		res.send("New holding has been added");
+	});
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });
 

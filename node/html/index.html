@@ -6,10 +6,15 @@
 <body>
 	<form action="/insertHolding" method="POST">
 		<label for="hodl">Hodl</label><br>
-		<input type="text" id="hodl" name="hodl"><br>
-		<input type="submit" value="Submit">
+		<input type="text" id="hodl" name="hodl">
+		<select id="coins" name="coins">
+			<option value="BTC">BTC</option>
+			<option value="ETH">ETH</option>
+			<option value="LINK">LINK</option>
+			<option value="CRO">CRO</option>
+			<option value="MATIC">MATIC</option>
+			<option value="SXP">SXP</option>
+		<input type="submit" value="Add holding">
 	</form>
-
-	<p>If you click the button, the data will be sent to /insertHolding.js.</p>
 </body>
 </html>
