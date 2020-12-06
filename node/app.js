@@ -27,7 +27,7 @@ var eurotousd = 1.21; //should never be used. Rate got from exchange
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA'];
 var deposits = new Array(coins.length).fill(0);
 var posessions = new Array(coins.length).fill(0);
-var trades = new Array(coins.length).fill(0);
+//var trades = new Array(coins.length).fill(0);
 var priceIn = 'USD';
 
 app.get('/', (req,res) => {
@@ -89,6 +89,7 @@ app.get('/', (req,res) => {
 	     totalDeposits = result[0].totalDeposits;
 	     db.query(sql11, function(err,result99) {
 	      if(err) throw err;
+	      var trades = new Array(coins.length).fill(0);
 	      for(j=0;j<result99.length;j++) { //run through the trades table
 		 switch(result99[j].coin) {
 			 case 'MATIC':
