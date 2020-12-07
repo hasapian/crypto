@@ -4,21 +4,15 @@ const db = require('./verify.js');
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const createExchange = require('live-currency-exchange')
+const CoinMarketCap = require('coinmarketcap-api')
+const createExchange = require('live-currency-exchange');
 
 const app = express();
 const exchange = createExchange();
-
-const hostname = '0.0.0.0';
 const port = 80;
-
-
-const CoinMarketCap = require('coinmarketcap-api')
- 
-
-const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
-const client = new CoinMarketCap(apiKey)
-
+const priceIn = 'USD';
+const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
+const client = new CoinMarketCap(apiKey)
 
 var usdtoeuro = 0.842525;
 var eurotousd = 1.21; //should never be used. Rate got from exchange
@@ -27,169 +21,251 @@ var eurotousd = 1.21; //should never be used. Rate got from exchange
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA'];
 var deposits = new Array(coins.length).fill(0);
 var posessions = new Array(coins.length).fill(0);
-//var trades = new Array(coins.length).fill(0);
-var priceIn = 'USD';
+var trades = new Array(coins.length).fill(0);
+
+const sqlDeposits = "SELECT * FROM deposits"
+const sqlPosessions = "SELECT * FROM posessions"
+const sqlTrades = "SELECT * FROM trades"
+
+var depositResult,posessionsResult,tradesResult;
+var totalDeposits,stablecoins;
+
+function myFilltable(result,x) {
+    if(x==1)
+        totalDeposits = 0;
+    for(i=0;i<result.length;i++) {
+        var amount = result[i].amount;
+	if(x==1)
+	    totalDeposits+=amount;
+        switch(result[i].coin) {
+            case 'BTC':
+                switch(x) {
+                    case 1:
+                        deposits[0]+=amount;
+                        break;
+                    case 2:
+                        posessions[0]+=amount;
+                        break;
+                    case 3:
+                        trades[0]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'ETH':
+                switch(x) {
+                    case 1:
+                        deposits[1]+=amount;
+                        break;
+                    case 2:
+                        posessions[1]+=amount;
+                        break;
+                    case 3:
+                        trades[1]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'LINK':
+                switch(x) {
+                    case 1:
+                        deposits[2]+=amount;
+                        break;
+                    case 2:
+                        posessions[2]+=amount;
+                        break;
+                    case 3:
+                        trades[2]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'CRO':
+                switch(x) {
+                    case 1:
+                        deposits[3]+=amount;
+                        break;
+                    case 2:
+                        posessions[3]+=amount;
+                        break;
+                    case 3:
+                        trades[3]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'SXP':
+                switch(x) {
+                    case 1:
+                        deposits[4]+=amount;
+                        break;
+                    case 2:
+                        posessions[4]+=amount;
+                        break;
+                    case 3:
+                        trades[4]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'MATIC':
+                switch(x) {
+                    case 1:
+                        deposits[5]+=amount;
+                        break;
+                    case 2:
+                        posessions[5]+=amount;
+                        break;
+                    case 3:
+                        trades[5]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+		        break;
+            case 'RSR':
+                switch(x) {
+                    case 1:
+                        deposits[6]+=amount;
+                        break;
+                    case 2:
+                        posessions[6]+=amount;
+                        break;
+                    case 3:
+                        trades[6]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+		        break;
+            case 'VET':
+                switch(x) {
+                    case 1:
+                        deposits[7]+=amount;
+                        break;
+                    case 2:
+                        posessions[7]+=amount;
+                        break;
+                    case 3:
+                        trades[7]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+		        break;
+            case 'BLZ':
+                switch(x) {
+                    case 1:
+                        deposits[8]+=amount;
+                        break;
+                    case 2:
+                        posessions[8]+=amount;
+                        break;
+                    case 3:
+                        trades[8]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+		        break;
+            case 'DOT':
+                switch(x) {
+                    case 1:
+                        deposits[9]+=amount;
+                        break;
+                    case 2:
+                        posessions[9]+=amount;
+                        break;
+                    case 3:
+                        trades[9]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+		        break;
+            case 'ADA':
+                switch(x) {
+                    case 1:
+                        deposits[10]+=amount;
+                        break;
+                    case 2:
+                        posessions[10]+=amount;
+                        break;
+                    case 3:
+                        trades[10]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
+            case 'USDT':
+                if(x==2)
+                    stablecoins = amount;
+                break;
+            default:
+               
+        }
+    }
+}
 
 app.get('/', (req,res) => {
- res.statusCode = 200;
- res.setHeader('Content-Type','text/html');
- res.write("<h1>Profits:</h1>\n");
- client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA'], convert: priceIn}).then((prices) => {
-  var sql = "SELECT SUM(amount) AS totalDeposits FROM deposits";
-  var sql1 = "SELECT SUM(amount) AS depBTC FROM deposits WHERE coin = '"+coins[0]+"'";
-  var sql2 = "SELECT SUM(amount) AS bitcoin FROM posessions WHERE coin = '"+coins[0]+"'";
-  var sql3 = "SELECT SUM(amount) AS depETH FROM deposits WHERE coin = '"+coins[1]+"'";
-  var sql4 = "SELECT SUM(amount) AS ether FROM posessions WHERE coin = '"+coins[1]+"'";
-  var sql5 = "SELECT SUM(amount) AS depLINK FROM deposits WHERE coin = '"+coins[2]+"'";
-  var sql6 = "SELECT SUM(amount) AS chainlink FROM posessions WHERE coin = '"+coins[2]+"'";
-  var sql7 = "SELECT SUM(amount) AS depCRO FROM deposits WHERE coin = '"+coins[3]+"'";
-  var sql8 = "SELECT SUM(amount) AS cro FROM posessions WHERE coin = '"+coins[3]+"'";
-  var sql9 = "SELECT SUM(amount) AS depSXP FROM deposits WHERE coin = '"+coins[4]+"'";
-  var sql10 = "SELECT SUM(amount) AS swipe FROM posessions WHERE coin = '"+coins[4]+"'";
-  var sql11 = "SELECT * FROM trades";
-  var sql12 = "SELECT SUM(amount) AS matic FROM posessions WHERE coin = '"+coins[5]+"'";
-  var sql13 = "SELECT SUM(amount) AS depRSR FROM deposits WHERE coin = '"+coins[6]+"'";
-  var sql14 = "SELECT SUM(amount) AS reserve FROM posessions WHERE coin = '"+coins[6]+"'";
-  var sql15 = "SELECT SUM(amount) AS depVET FROM deposits WHERE coin = '"+coins[7]+"'";
-  var sql16 = "SELECT SUM(amount) AS vechain FROM posessions WHERE coin = '"+coins[7]+"'";
-  var sql17 = "SELECT SUM(amount) AS depBLZ FROM deposits WHERE coin = '"+coins[8]+"'";
-  var sql18 = "SELECT SUM(amount) AS bluzelle FROM posessions WHERE coin = '"+coins[8]+"'";
-  db.query(sql1, function(err,result,fields){
-   if(err) throw err;
-   deposits[0] = result[0].depBTC;
-   db.query(sql2, function(err,result2,fields2) {
-    if(err) throw err;
-    posessions[0] = result2[0].bitcoin;
-    db.query(sql3, function(err,result3,fields3) {
-     if(err) throw err;
-     deposits[1] = result3[0].depETH;
-     db.query(sql4, function(err,result4,fields4) {
-      if(err) throw err;
-      posessions[1] = result4[0].ether;
-      db.query(sql5, function(err,result5,fields5) {
-       if(err) throw err;
-       deposits[2] = result5[0].depLINK;
-       db.query(sql6, function(err,result6,fields6) {			
-	if(err) throw err;
-	posessions[2] = result6[0].chainlink;
-	db.query(sql7, function(err,result7) {
-	 if(err) throw err;
-	 deposits[3] = result7[0].depCRO;
-	 db.query(sql8, function(err,result8) {
-	  if(err) throw err;
-	  posessions[3] = result8[0].cro;
-	  db.query(sql9, function(err,result9) {
-	   if(err) throw err;
-	   deposits[4] = result9[0].depSXP;
-	   db.query(sql10, function(err,result10) {
-	    if (err) throw err;
-	    posessions[4] = result10[0].swipe;
-	    db.query(sql, function(err,result) {
-	     if(err) throw err;
-	     totalDeposits = result[0].totalDeposits;
-	     db.query(sql11, function(err,result99) {
-	      if(err) throw err;
-	      var trades = new Array(coins.length).fill(0);
-	      for(j=0;j<result99.length;j++) { //run through the trades table
-		 switch(result99[j].coin) {
-			 case 'MATIC':
-				 trades[5] += result99[j].amount;
-				 break;
-			 case 'RSR':
-				 trades[6] += result99[j].amount;
-				 break;
-			 case 'VET':
-				 trades[7] += result99[j].amount;
-				 break;
-			 case 'BLZ':
-				 trades[8] += result99[j].amount;
-				 break;
-			 case 'DOT':
-				 trades[9] += result99[j].amount;
-				 break;
-			 case 'ADA':
-				 trades[10] += result99[j].amount;
-				 break;
-			 default:
-				 console.log("No match!");
-		 }
-	      }
-	      db.query(sql12, function(err,result) {
-	       if(err) throw err;
-	       posessions[5] = result[0].matic;
-	       db.query(sql14, function(err,result) {
-		if(err) throw err;
-		posessions[6] = result[0].reserve;
-		db.query(sql16, function(err, result) {
-	         if(err) throw err;
-		 posessions[7] = result[0].vechain;
-		 db.query(sql18, function(err, result) {
-		  if(err) throw err;
-	          posessions[8] = result[0].bluzelle;
-	          db.query("SELECT SUM(amount) AS polkadot FROM posessions WHERE coin = 'DOT'", function(err,result) {
-	           if(err) throw err;
-	           posessions[9] = result[0].polkadot;
-		   db.query("SELECT SUM(amount) AS cardano FROM posessions WHERE coin = 'ADA'", function(err,result) {
-		    if(err) throw err;
-		    posessions[10] = result[0].cardano;
-              exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
-               usdtoeuro = result.rate;
-   	       var sumOfPosessions = 0;
-	       for(i=0;i<11;i++){
-	        res.write("\n"+coins[i]);
-	        res.write("\nDeposits: "+(deposits[i]+trades[i]).toString()+"<br>");
-	        res.write("\nHoldings: "+posessions[i].toString()+"<br>");
-	        cmcprice = prices.data[coins[i]].quote[priceIn].price;
-	        res.write("\nPrice: "+cmcprice.toString()+"<br>");
-	        var tempValue = (priceIn == 'USD') ? posessions[i] * cmcprice * usdtoeuro : posessions[i] * cmcprice;
-		       console.log("i:"+i+" trade[i]:"+trades[i]); 
-	        res.write("\nProfit: "+(tempValue - ( deposits[i] + trades[i] * usdtoeuro )).toString()+"<br>");
-	        res.write("\n---------<br>");
-	        sumOfPosessions += tempValue;
-	        if(i==10) { 
-	         res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
-	         res.write("Total Deposits: "+totalDeposits+"<br>");
-	         res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
-	         res.write('<a href="\add">Add holdings!</a>');
-	         res.end();
-	        } //end if
-	       } //end for
-              }).catch(console.error)  //exchange
-		   }); //ada sql	 
-	          }); //dot sql
-	         }); //sql 18
-	        }); //sql16
-	       }); //sql14
-	      }); //sql12
-	     });		     
-	    });
-	   });
-	  });
-	 });
-	});
-       });
-      });
-     });
-    });
-   });
-  });
- }).catch(console.error)
+    res.statusCode = 200;
+    res.setHeader('Content-Type','text/html');
+    res.write("<h1>Profits:</h1>\n");
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA'], convert: priceIn}).then((prices) => {
+        db.query(sqlDeposits, function(err,result) {
+            if(err) throw err;
+            depositResult = result;
+            deposits.fill(0);
+            myFilltable(result,1);
+            db.query(sqlPosessions, function(err,result) {
+                if(err) throw err;
+                posessionsResult = result;
+                posessions.fill(0);
+                myFilltable(result,2);
+                db.query(sqlTrades, function(err,result) {
+                    if(err) throw err;
+                    tradesResult = result;
+                    trades.fill(0);
+                    myFilltable(result,3);
+                    exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
+                        usdtoeuro = result.rate;
+                        var sumOfPosessions = 0;
+			console.log(deposits);
+			    console.log(posessions);
+			    console.log(trades);
+                        for(i=0;i<coins.length;i++){
+                            res.write("\n"+coins[i]);
+                            res.write("\nDeposits: "+(deposits[i] + trades[i] * usdtoeuro).toString()+"<br>");
+                            res.write("\nHoldings: "+posessions[i].toString()+"<br>");
+                            cmcprice = prices.data[coins[i]].quote[priceIn].price;
+                            res.write("\nPrice: "+cmcprice.toString()+"<br>");
+                            var tempValue = (priceIn == 'USD') ? posessions[i] * cmcprice * usdtoeuro : posessions[i] * cmcprice;
+                            res.write("\nProfit: "+(tempValue - ( deposits[i] + trades[i] * usdtoeuro )).toString()+"<br>");
+                            res.write("\n---------<br>");
+                            sumOfPosessions += tempValue;
+                            if(i==(coins.length-1)) { 
+                                res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
+                                res.write("Total Deposits: "+totalDeposits+"<br>");
+                                res.write("<b>P&L: "+(sumOfPosessions - totalDeposits)+"</b><br>");
+				res.write("(plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
+                                res.write('<a href="\add">Add holdings!</a><br>');
+				res.write('<a href="\stable">Update Stablecoins!</a>');
+                                res.end();
+                            } //end if
+                        } //end for
+                    }).catch(console.error)  //exchange
+                });
+            });
+        });
+    }).catch(console.error)
 });
 
-/*
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/html');
-  fs.readFile('./html/index.html',null,function(error,data) {
-	  if(error) {
-		  res.writeHead(404);
-		  res.write("Whoops! File not found!");
-	  } else {
-		  res.write(data);
-	  }
-	  res.end();
-  });
-});*/
 
 app.get('/add', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/index.html'));
@@ -216,7 +292,19 @@ app.post('/insertHolding', function (req,res) {
 	});
 });
 
+app.get('/stable', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/mystable.html'));
+});
+
+app.post('/updateStablecoins', function (req,res) {
+    var amount = req.body.stable;
+    var sql = "UPDATE posessions SET amount = "+amount+" WHERE coin = 'USDT'"
+    db.query(sql, function(err,result) {
+        if(err) throw err;
+        res.send("USDT updated!");
+    });
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
-
