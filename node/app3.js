@@ -261,6 +261,7 @@ app.get('/', (req,res) => {
                                 res.write("Total Deposits: "+totalDeposits+"<br>");
                                 res.write("P&L: "+(sumOfPosessions - totalDeposits)+" (plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
                                 res.write('<a href="\add">Add holdings!</a>');
+				res.write('<a href="\stable">Update Stablecoins!</a>');
                                 res.end();
                             } //end if
                         } //end for
@@ -297,7 +298,7 @@ app.post('/insertHolding', function (req,res) {
 	});
 });
 
-app.get('/updateStable', function (req,res) {
+app.get('/stable', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/mystable.html'));
 });
 

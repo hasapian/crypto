@@ -7,7 +7,7 @@ services:
       - "80:80"
     depends_on:
       - mysql   
-    entrypoint: node app.js
+    entrypoint: node app3.js
     volumes:
       - /home/ec2-user/crypto/node:/hasapian
     container_name: node 
