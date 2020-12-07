@@ -213,12 +213,13 @@ function myFilltable(result,x) {
                 }
                 break;
             case 'USDT':
+		if(x==1)
+		    totalDeposits+=amount;
                 if(x==2)
                     stablecoins = amount;
                 break;
             default:
-                if(x==1)
-                    totalDeposits+=amount;
+               
         }
     }
 }
@@ -246,6 +247,9 @@ app.get('/', (req,res) => {
                     exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
                         usdtoeuro = result.rate;
                         var sumOfPosessions = 0;
+			console.log(deposits);
+			    console.log(posessions);
+			    console.log(trades);
                         for(i=0;i<coins.length;i++){
                             res.write("\n"+coins[i]);
                             res.write("\nDeposits: "+(deposits[i] + trades[i] * usdtoeuro).toString()+"<br>");
@@ -260,7 +264,7 @@ app.get('/', (req,res) => {
                                 res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
                                 res.write("Total Deposits: "+totalDeposits+"<br>");
                                 res.write("P&L: "+(sumOfPosessions - totalDeposits)+" (plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
-                                res.write('<a href="\add">Add holdings!</a>');
+                                res.write('<a href="\add">Add holdings!</a><br>');
 				res.write('<a href="\stable">Update Stablecoins!</a>');
                                 res.end();
                             } //end if
