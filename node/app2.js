@@ -32,6 +32,7 @@ var depositResult,posessionsResult,tradesResult;
 function myFilltable(result,x) {
     for(i=0;i<result.length;i++) {
         var amount = result[i].amount;
+        console.log("i: "+i+" amount: "+amount);
         switch(result[i].coin) {
             case 'MATIC':
                 switch(x) {
@@ -45,9 +46,8 @@ function myFilltable(result,x) {
                         trades[5]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             case 'RSR':
                 switch(x) {
                     case 1:
@@ -60,9 +60,8 @@ function myFilltable(result,x) {
                         trades[6]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             case 'VET':
                 switch(x) {
                     case 1:
@@ -75,9 +74,8 @@ function myFilltable(result,x) {
                         trades[7]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             case 'BLZ':
                 switch(x) {
                     case 1:
@@ -90,9 +88,8 @@ function myFilltable(result,x) {
                         trades[8]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             case 'DOT':
                 switch(x) {
                     case 1:
@@ -105,9 +102,8 @@ function myFilltable(result,x) {
                         trades[9]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             case 'ADA':
                 switch(x) {
                     case 1:
@@ -120,11 +116,10 @@ function myFilltable(result,x) {
                         trades[10]+=amount;
                         break;
                     default:
-                        //should do nothing
+                        console.log("No second match!");
                 }
-		break;
             default:
-                //should do nothing
+                console.log("No match!");
         }
     }
 }
@@ -139,22 +134,16 @@ app.get('/', (req,res) => {
             depositResult = result;
             deposits.fill(0);
             myFilltable(result,1);
-	    console.log("Deposits: ");
-	    console.log(deposits);
             db.query(sqlPosessions, function(err,result) {
                 if(err) throw err;
                 posessionsResult = result;
                 posessions.fill(0);
                 myFilltable(result,2);
-		console.log("Posessions: ");
-	    	console.log(posessions);
                 db.query(sqlTrades, function(err,result) {
                     if(err) throw err;
                     tradesResult = result;
                     trades.fill(0);
                     myFilltable(result,3);
-		    console.log("Trades: ");
-	    	    console.log(trades);
                     exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
                         usdtoeuro = result.rate;
                         var sumOfPosessions = 0;
@@ -171,8 +160,8 @@ app.get('/', (req,res) => {
                             sumOfPosessions += tempValue;
                             if(i==(coins.length-1)) { 
                                 res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
-                                //res.write("Total Deposits: "+totalDeposits+"<br>");
-                                //res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
+                                res.write("Total Deposits: "+totalDeposits+"<br>");
+                                res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
                                 res.write('<a href="\add">Add holdings!</a>');
                                 res.end();
                             } //end if
