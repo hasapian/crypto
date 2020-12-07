@@ -298,7 +298,7 @@ app.post('/insertHolding', function (req,res) {
 });
 
 app.get('/updateStable', function (req,res) {
-	res.sendFile(path.join(__dirname,'./html/stable.html'));
+	res.sendFile(path.join(__dirname,'./html/mystable.html'));
 });
 
 app.post('/updateStablecoins', function (req,res) {
