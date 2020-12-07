@@ -35,12 +35,12 @@ function myFilltable(result,x) {
         totalDeposits = 0;
     for(i=0;i<result.length;i++) {
         var amount = result[i].amount;
+	totalDeposits+=amount;
         switch(result[i].coin) {
             case 'BTC':
                 switch(x) {
                     case 1:
                         deposits[0]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[0]+=amount;
@@ -56,7 +56,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[1]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[1]+=amount;
@@ -72,7 +71,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[2]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[2]+=amount;
@@ -88,7 +86,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[3]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[3]+=amount;
@@ -104,7 +101,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[4]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[4]+=amount;
@@ -120,7 +116,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[5]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[5]+=amount;
@@ -136,7 +131,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[6]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[6]+=amount;
@@ -152,7 +146,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[7]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[7]+=amount;
@@ -168,7 +161,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[8]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[8]+=amount;
@@ -184,7 +176,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[9]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[9]+=amount;
@@ -200,7 +191,6 @@ function myFilltable(result,x) {
                 switch(x) {
                     case 1:
                         deposits[10]+=amount;
-                        totalDeposits+=amount;
                         break;
                     case 2:
                         posessions[10]+=amount;
@@ -213,8 +203,6 @@ function myFilltable(result,x) {
                 }
                 break;
             case 'USDT':
-		if(x==1)
-		    totalDeposits+=amount;
                 if(x==2)
                     stablecoins = amount;
                 break;
@@ -263,7 +251,8 @@ app.get('/', (req,res) => {
                             if(i==(coins.length-1)) { 
                                 res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
                                 res.write("Total Deposits: "+totalDeposits+"<br>");
-                                res.write("P&L: "+(sumOfPosessions - totalDeposits)+" (plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
+                                res.write("<b>P&L: "+(sumOfPosessions - totalDeposits)<b/><br>");
+				res.write("(plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
                                 res.write('<a href="\add">Add holdings!</a><br>');
 				res.write('<a href="\stable">Update Stablecoins!</a>');
                                 res.end();
