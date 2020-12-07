@@ -149,7 +149,7 @@ app.get('/', (req,res) => {
 	        if(i==10) { 
 	         res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
 	         res.write("Total Deposits: "+totalDeposits+"<br>");
-	         res.write("P&L: "+(sumOfPosessions - totalDeposits)+"<br>");
+	         res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
 	         res.write('<a href="\add">Add holdings!</a>');
 	         res.end();
 	        } //end if
