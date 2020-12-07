@@ -32,7 +32,6 @@ var depositResult,posessionsResult,tradesResult;
 function myFilltable(result,x) {
     for(i=0;i<result.length;i++) {
         var amount = result[i].amount;
-        console.log("i: "+i+" amount: "+amount);
         switch(result[i].coin) {
             case 'MATIC':
                 switch(x) {
@@ -46,7 +45,7 @@ function myFilltable(result,x) {
                         trades[5]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             case 'RSR':
                 switch(x) {
@@ -60,7 +59,7 @@ function myFilltable(result,x) {
                         trades[6]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             case 'VET':
                 switch(x) {
@@ -74,7 +73,7 @@ function myFilltable(result,x) {
                         trades[7]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             case 'BLZ':
                 switch(x) {
@@ -88,7 +87,7 @@ function myFilltable(result,x) {
                         trades[8]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             case 'DOT':
                 switch(x) {
@@ -102,7 +101,7 @@ function myFilltable(result,x) {
                         trades[9]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             case 'ADA':
                 switch(x) {
@@ -116,10 +115,10 @@ function myFilltable(result,x) {
                         trades[10]+=amount;
                         break;
                     default:
-                        console.log("No second match!");
+                        //should do nothing
                 }
             default:
-                console.log("No match!");
+                //should do nothing
         }
     }
 }
@@ -134,16 +133,22 @@ app.get('/', (req,res) => {
             depositResult = result;
             deposits.fill(0);
             myFilltable(result,1);
+	    console.log("Deposits: ");
+	    console.log(deposits);
             db.query(sqlPosessions, function(err,result) {
                 if(err) throw err;
                 posessionsResult = result;
                 posessions.fill(0);
                 myFilltable(result,2);
+		console.log("Posessions: ");
+	    	console.log(posessions);
                 db.query(sqlTrades, function(err,result) {
                     if(err) throw err;
                     tradesResult = result;
                     trades.fill(0);
                     myFilltable(result,3);
+		    console.log("Trades: ");
+	    	    console.log(trades);
                     exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
                         usdtoeuro = result.rate;
                         var sumOfPosessions = 0;
@@ -160,8 +165,8 @@ app.get('/', (req,res) => {
                             sumOfPosessions += tempValue;
                             if(i==(coins.length-1)) { 
                                 res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
-                                res.write("Total Deposits: "+totalDeposits+"<br>");
-                                res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
+                                //res.write("Total Deposits: "+totalDeposits+"<br>");
+                                //res.write("P&L: "+(sumOfPosessions - totalDeposits)+" And some dollars!<br>");
                                 res.write('<a href="\add">Add holdings!</a>');
                                 res.end();
                             } //end if
