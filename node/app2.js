@@ -47,6 +47,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             case 'RSR':
                 switch(x) {
                     case 1:
@@ -61,6 +62,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             case 'VET':
                 switch(x) {
                     case 1:
@@ -75,6 +77,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             case 'BLZ':
                 switch(x) {
                     case 1:
@@ -89,6 +92,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             case 'DOT':
                 switch(x) {
                     case 1:
@@ -103,6 +107,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             case 'ADA':
                 switch(x) {
                     case 1:
@@ -117,6 +122,7 @@ function myFilltable(result,x) {
                     default:
                         //should do nothing
                 }
+		break;
             default:
                 //should do nothing
         }
