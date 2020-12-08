@@ -28,11 +28,13 @@ const sqlPosessions = "SELECT * FROM posessions"
 const sqlTrades = "SELECT * FROM trades"
 
 var depositResult,posessionsResult,tradesResult;
-var totalDeposits,stablecoins;
+var totalDeposits,stablecoins,stableDeposits;
 
 function myFilltable(result,x) {
-    if(x==1)
+    if(x==1) {
         totalDeposits = 0;
+        stableDeposits = 0;
+    }
     for(i=0;i<result.length;i++) {
         var amount = result[i].amount;
 	if(x==1)
@@ -204,6 +206,8 @@ function myFilltable(result,x) {
                 }
                 break;
             case 'USDT':
+                if(x==1)
+                    stableDeposits+=amount;
                 if(x==2)
                     stablecoins = amount;
                 break;
@@ -236,9 +240,6 @@ app.get('/', (req,res) => {
                     exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
                         usdtoeuro = result.rate;
                         var sumOfPosessions = 0;
-			console.log(deposits);
-			    console.log(posessions);
-			    console.log(trades);
                         for(i=0;i<coins.length;i++){
                             res.write("\n"+coins[i]);
                             res.write("\nDeposits: "+(deposits[i] + trades[i] * usdtoeuro).toString()+"<br>");
@@ -250,13 +251,20 @@ app.get('/', (req,res) => {
                             res.write("\n---------<br>");
                             sumOfPosessions += tempValue;
                             if(i==(coins.length-1)) { 
+                                res.write("Portfolio:<br>")
+                                for(j=0;j<coins.length;j++) {
+                                    var percentage = ((deposits[j] + trades[j] * usdtoeuro) * 100) / (totalDeposits - stableDeposits);
+                                    res.write(coins[j]+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                                }
+                                res.write("---------<br>");
                                 res.write("Total Holdings Value: "+sumOfPosessions+"<br>");
                                 res.write("Total Deposits: "+totalDeposits+"<br>");
                                 res.write("<b>P&L: "+(sumOfPosessions - totalDeposits)+"</b><br>");
 				res.write("(plus "+stablecoins+" stablecoins = "+stablecoins * usdtoeuro+" EURO)<br>");
                                 res.write('<a href="\add">Add holdings!</a><br>');
-				res.write('<a href="\stable">Update Stablecoins!</a>');
-                                res.end();
+				res.write('<a href="\stable">Update Stablecoins!</a><br>');
+				res.write('<a href="\\trade">Add new trade!</a><br>');                              
+				res.end();
                             } //end if
                         } //end for
                     }).catch(console.error)  //exchange
@@ -273,10 +281,6 @@ app.get('/add', function (req,res) {
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-app.post('/updateHolding', function(req,res) {
-	cosole.log("Holding updated");
-});
 
 app.post('/insertHolding', function (req,res) {
 	var amount = req.body.hodl;
@@ -302,6 +306,71 @@ app.post('/updateStablecoins', function (req,res) {
     db.query(sql, function(err,result) {
         if(err) throw err;
         res.send("USDT updated!");
+    });
+});
+
+app.get('/showPosessions', function (req,res) {
+    db.query("SELECT * FROM posessions", function(err,result) {
+        if(err) throw err;
+	for(i=0;i<result.length;i++) {
+	        res.write(result[i].coin+": ");
+		res.write(result[i].amount+"\n");
+	}
+	res.end();
+    });
+});
+
+app.get('/showTrades', function (req,res) {
+	    db.query("SELECT * FROM trades", function(err,result) {
+		    if(err) throw err;
+		    for(i=0;i<result.length;i++) {
+			    res.write(result[i].coin+": ");
+			    res.write(result[i].amount+"\n");
+		    }
+		    res.end();
+		        });
+});
+
+app.get('/showDeposits', function (req,res) {
+	    db.query("SELECT * FROM deposits", function(err,result) {
+		    if(err) throw err;
+		    for(i=0;i<result.length;i++) {
+			    res.write(result[i].coin+": ");
+			    res.write(result[i].amount+"\n");
+		    }
+		    res.end();
+		        });
+});
+
+app.get('/trade', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/trades.html'));
+});
+
+app.post('/updateTrades', function (req,res) {
+    var coinAmount = req.body.coinAmount;
+    var usdAmount = req.body.usdAmount;
+    var coin = req.body.coins;
+    var tether = 0;
+    var sql = "SELECT amount FROM posessions WHERE coin = 'USDT'"
+    var sql2 = "INSERT INTO trades (coin,amount) VALUES ('"+coin+"',"+usdAmount+")"
+    var sql3 = "INSERT INTO posessions (coin,amount) VALUES ('"+coin+"',"+coinAmount+")"
+    db.query(sql, function(err,result) {
+        if(err) throw err;
+        tether = result[0].amount;
+        db.query(sql2, function(err,result) {
+            if(err) throw err;
+            console.log("Data inserted into trades")
+            db.query(sql3, function(err,result) {
+                if(err) throw err;
+                console.log("Date inserted into posessions")
+                var sql4 = "UPDATE posessions SET amount = "+(tether - usdAmount)+" WHERE coin = 'USDT'";
+                db.query(sql4, function(err,result) {
+                    if(err) throw err;
+                    console.log("USDT amount updated")
+                    res.send("All queries performed")
+                });
+            });
+        });
     });
 });
 
