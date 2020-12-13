@@ -19,3 +19,11 @@ CREATE TABLE trades (
 	PRIMARY KEY(id)
 );
 
+CREATE TABLE interest (
+	id INT unsigned NOT NULL AUTO_INCREMENT,
+	coin VARCHAR(150) NOT NULL,
+	amount DECIMAL(19,8) unsigned NOT NULL,
+	wallet VARCHAR(150) NOT NULL,
+	date DATE NOT NULL,
+	PRIMARY KEY(id)
+);
