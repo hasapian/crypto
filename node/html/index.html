@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Hello, world!</title>
+	<title>Add Holding</title>
 </head>
 <body>
 	<form action="/insertHolding" method="POST">
-		<label for="hodl">Hodl</label><br>
+		<label for="hodl">Enter data</label><br>
 		<input type="text" id="hodl" name="hodl">
 		<select id="coins" name="coins">
 			<option value="BTC">BTC</option>
@@ -13,7 +13,16 @@
 			<option value="LINK">LINK</option>
 			<option value="CRO">CRO</option>
 			<option value="MATIC">MATIC</option>
-			<option value="SXP">SXP</option>
+            <option value="SXP">SXP</option>
+        </select>    
+        <select id="wallet" name="wallet">
+            <option value="Celsius">Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance">Binance</option>
+        </select>
+        <input type="checkbox" id="isInterest" name="isInterest" value="Yes">
+        <label for="interest"> Interest</label><br>
 		<input type="submit" value="Add holding">
 	</form>
 </body>

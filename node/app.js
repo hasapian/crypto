@@ -284,15 +284,22 @@ app.use(bodyParser.json());
 
 app.post('/insertHolding', function (req,res) {
 	var amount = req.body.hodl;
-	var coin = req.body.coins;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
+    var isInterest = req.body.isInterest;
 	console.log("coin: "+coin);
 	console.log("amount: "+amount);
-	var sql = "INSERT INTO posessions (coin,amount) VALUES ('"+coin+"','"+amount+"')"
+    var sql = "INSERT INTO posessions (coin,amount) VALUES ('"+coin+"','"+amount+"')"
+    var sql2 = "INSERT INTO interest (coin,amount,wallet,date) VALUES ('"+coin+"','"+amount+"','"+wallet+"',CURRENT_DATE)"
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
-		if(err) throw err;
-		console.log("New holding has been added");
-		res.send("New holding has been added");
+        if(err) throw err;
+        if(isInterest == "Yes") {
+            db.query(sql2, function(err,result) {
+                if(err) throw err;
+            });
+        }
+        res.send("New holding has been added");
 	});
 });
 
@@ -340,6 +347,22 @@ app.get('/showDeposits', function (req,res) {
 		    }
 		    res.end();
 		        });
+});
+
+app.get('/runsql', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/runSQL2.html'));
+});
+
+app.post('/sqlquery', function (req,res) {
+    var sql = req.body.sql;
+    db.query(sql, function(err,result) {
+        if(err) throw err;
+        for(i=0;i<result.length;i++) {
+            res.write(result[i].coin+": ");
+            res.write(result[i].amount+"\n");
+        }
+        res.end();
+    });
 });
 
 app.get('/trade', function (req,res) {
