@@ -17,8 +17,8 @@ const client = new CoinMarketCap(apiKey)
 var usdtoeuro = 0.842525;
 var eurotousd = 1.21; //should never be used. Rate got from exchange
 
-//	         0     1     2	    3     4      5      6     7     8     9     10
-const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA'];
+//	             0     1     2	    3     4      5      6     7     8     9     10    11
+const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL'];
 var deposits = new Array(coins.length).fill(0);
 var posessions = new Array(coins.length).fill(0);
 var trades = new Array(coins.length).fill(0);
@@ -205,6 +205,21 @@ function myFilltable(result,x) {
                         //should do nothing
                 }
                 break;
+            case 'CEL':
+                switch(x) {
+                    case 1:
+                        deposits[11]+=amount;
+                        break;
+                    case 2:
+                        posessions[11]+=amount;
+                        break;
+                    case 3:
+                        trades[11]+=amount;
+                        break;
+                    default:
+                        //should do nothing
+                }
+                break;
             case 'USDT':
                 if(x==1)
                     stableDeposits+=amount;
@@ -221,7 +236,7 @@ app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
     res.write("<h1>Profits:</h1>\n");
-    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA'], convert: priceIn}).then((prices) => {
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL'], convert: priceIn}).then((prices) => {
         db.query(sqlDeposits, function(err,result) {
             if(err) throw err;
             depositResult = result;
@@ -349,6 +364,70 @@ app.get('/showDeposits', function (req,res) {
 		        });
 });
 
+/*
+app.get('/showInterest', function (req,res) {
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL'], convert: 'EUR'}).then((prices) => {
+        db.query("SELECT * FROM interest WHERE MONTH(date) = MONTH(CURRENT_DATE)", function(err,result) {
+            if(err) throw err;
+            var sum = 0;
+            for(i=0;i<result.length;i++) {
+                if(result[i].coin == 'BTC')
+                    sum += result[i].amount * prices.data.BTC.quote.EUR.price;
+                else if(result[i].coin == 'CRO')
+                    sum += result[i].amount * prices.data.CRO.quote.EUR.price;
+                else if(result[i].coin == 'ETH')
+                    sum += result[i].amount * prices.data.ETH.quote.EUR.price;
+                else if(result[i].coin == 'LINK')
+                    sum += result[i].amount * prices.data.LINK.quote.EUR.price;
+                else if(result[i].coin == 'CEL')
+                    sum += result[i].amount * prices.data.CEL.quote.EUR.price;
+                res.write(result[i].coin+" - ");
+                res.write(result[i].amount+" - ");
+                res.write(result[i].wallet+" - ");
+                res.write(result[i].date+"\n");
+            }
+            res.write("Total Interest: " + sum);
+            res.end();
+        });
+    });
+});*/
+
+app.get('/monthInterest', function (req,res) {
+    var monthValue = req.query.months;
+    var option1 = "SELECT * FROM interest WHERE MONTH(date) = MONTH(CURRENT_DATE)"
+    var option2 = "SELECT * FROM interest WHERE MONTH(date) = " +monthValue
+    var sql = (typeof monthValue !== 'undefined' && monthValue ) ? option2 : option1;
+    res.write(sql + "\n");
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL'], convert: 'EUR'}).then((prices) => {
+        db.query(sql, function(err,result) {
+            if(err) throw err;
+            var sum = 0;
+            for(i=0;i<result.length;i++) {
+                if(result[i].coin == 'BTC')
+                    sum += result[i].amount * prices.data.BTC.quote.EUR.price;
+                else if(result[i].coin == 'CRO')
+                    sum += result[i].amount * prices.data.CRO.quote.EUR.price;
+                else if(result[i].coin == 'ETH')
+                    sum += result[i].amount * prices.data.ETH.quote.EUR.price;
+                else if(result[i].coin == 'LINK')
+                    sum += result[i].amount * prices.data.LINK.quote.EUR.price;
+                else if(result[i].coin == 'CEL')
+                    sum += result[i].amount * prices.data.CEL.quote.EUR.price;
+                res.write(result[i].coin+" - ");
+                res.write(result[i].amount+" - ");
+                res.write(result[i].wallet+" - ");
+                res.write(result[i].date+"\n");
+            }
+            res.write("Total Interest: " + sum);
+            res.end();
+        });
+    });
+});
+
+app.get('/showInterest', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/month.html'));
+});
+
 app.get('/runsql', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/runSQL2.html'));
 });
@@ -400,3 +479,4 @@ app.post('/updateTrades', function (req,res) {
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
+
