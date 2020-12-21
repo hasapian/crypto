@@ -392,11 +392,12 @@ app.get('/showInterest', function (req,res) {
     });
 });*/
 
-app.get('/showInterest', function (req,res) {
-    var monthValue = req.body.months;
+app.get('/monthInterest', function (req,res) {
+    var monthValue = req.query.months;
     var option1 = "SELECT * FROM interest WHERE MONTH(date) = MONTH(CURRENT_DATE)"
-    var option2 = "SELECT * FROM interest WHERE MONTH(date) = MONTH("+monthValue+")"
-    var sql = (monthValue == null) ? option1 : option2;
+    var option2 = "SELECT * FROM interest WHERE MONTH(date) = " +monthValue
+    var sql = (typeof monthValue !== 'undefined' && monthValue ) ? option2 : option1;
+    res.write(sql + "\n");
     client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL'], convert: 'EUR'}).then((prices) => {
         db.query(sql, function(err,result) {
             if(err) throw err;
@@ -423,7 +424,7 @@ app.get('/showInterest', function (req,res) {
     });
 });
 
-app.get('/showInterestMonth', function (req,res) {
+app.get('/showInterest', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/month.html'));
 });
 
