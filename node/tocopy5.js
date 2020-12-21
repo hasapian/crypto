@@ -19,7 +19,7 @@ var eurotousd = 1.21; //should never be used. Rate got from exchange
 
 //	             0     1     2	    3     4      5      6     7     8     9     10    11
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL'];
-const CoinsEnum = {"BTC":0,"ETH":1};
+const CoinsEnum = {BTC:0,ETH:1};
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var posessions = new Array(coins.length).fill(0);
@@ -37,8 +37,9 @@ function myFilltable(result,x) {
         totalDeposits = 0;
         stableDeposits = 0;
     }
-    console.log("The enum: " + CoinsEnum[result[1].coin]);
+    
     for(i=0;i<result.length;i++) {
+	console.log("The enum: " + CoinsEnum[result[i].coin]);
         var amount = result[i].amount;
 	    if(x==1)
 	        totalDeposits+=amount;
