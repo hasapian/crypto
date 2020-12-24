@@ -42,7 +42,7 @@ var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,depo
 "('DOT',21.2601,'Binance',false,NULL,false,105.943865,'USDT',5.05,false),"+
 "('DOT',13.036,'Binance',false,NULL,false,50,'EUR',4.68,false),"+
 "('BLZ',1031.5674,'Binance',false,NULL,false,50,'USDT',0.04842,false),"+
-"('UNI',16.69329,'Binance',false,NULL,false,53.88975,'USDT',3.2250,false)"+
+"('UNI',16.69329,'Binance',false,NULL,false,53.88975,'USDT',3.2250,false),"+
 "('LINK',8.388603,'Binance',false,NULL,false,69.94701,'EUR',10.15,false);"
 
 con.connect(function(err) {
