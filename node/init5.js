@@ -22,7 +22,7 @@ var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,depo
 "('CRO',320.99451806,'Crypto',false,NULL,true,0,NULL,NULL,false),"+
 "('CRO',301.63548194,'Crypto',true,'2020-11-14',false,0,NULL,NULL,false),"+
 "('SXP',300,'Swipe',false,NULL,false,313.82,'EUR',NULL,true),"+
-"('BTC',0.0015,'Celsius',false,NULL,false,0,NULL,NULL,false),"+
+"('BTC',0.015,'Celsius',false,NULL,false,0,NULL,NULL,false),"+
 "('BTC',0.00107,'Celsius',false,NULL,true,0,NULL,NULL,false),"+
 "('BTC',0.00108,'Celsius',false,NULL,true,0,NULL,NULL,false),"+
 "('BTC',0.00007,'Celsius',true,'2020-11-14',false,0,NULL,NULL,false),"+
