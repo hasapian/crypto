@@ -10,6 +10,8 @@ var con = mysql.createConnection({
 
 var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits) VALUES "+
 "('BTC',0.08517096,'BlockFi',false,NULL,false,1117.25,'EUR',12939.20,true),"+
+"('USDT',300,'Binance',false,NULL,false,260.87,'EUR',1.22,true),"+
+"('USDT',300,'Binance',false,NULL,false,253.58,'EUR',1.22,true),"+
 "('BTC',0.025,'Crypto',false,NULL,false,243.26,'EUR',11855.23,true),"+
 "('BTC',0.000184,'Crypto',true,'2020-11-14',false,0,NULL,NULL,false),"+
 "('BTC',-0.025184,'Crypto',false,NULL,false,-577.48,'USDT',22950,false),"+
