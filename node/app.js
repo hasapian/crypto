@@ -17,9 +17,9 @@ const client = new CoinMarketCap(apiKey)
 var usdtoeuro = 0.842525;
 var eurotousd = 1.21; //should never be used. Rate got from exchange
 
-//	             0     1     2	    3     4      5      6     7     8     9     10    11   12
-const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI'];
-const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12};
+//	         0     1     2	    3     4      5      6     7     8     9     10    11   12	 13
+const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT'];
+const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13};
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -62,7 +62,7 @@ app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
     res.write("<h1>Work In progress</h1>\n");
-    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI'], convert: priceIn}).then((prices) => {
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'], convert: priceIn}).then((prices) => {
         exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
             usdtoeuro = result.rate;
             db.query(sqlHoldings, function(err,result) {
@@ -169,7 +169,7 @@ app.get('/monthInterest', function (req,res) {
     var option2 = "SELECT * FROM holdings WHERE isInterest = true AND MONTH(date) = " +monthValue
     var sql = (typeof monthValue !== 'undefined' && monthValue ) ? option2 : option1;
     //res.write(sql + "\n");
-    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI'], convert: 'EUR'}).then((prices) => {
+    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'], convert: 'EUR'}).then((prices) => {
         db.query(sql, function(err,result) {
             if(err) throw err;
             var sum = 0;
