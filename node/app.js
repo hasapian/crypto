@@ -137,7 +137,7 @@ app.post('/insertHolding', function (req,res) {
         sql = "INSERT INTO holdings (coin,amount,wallet,isPromo) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+promo+")"
     else
         sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits)"+
-        "VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE,"+deposit+",'"+currency+"',"+price+","+totalDeposits+");"
+        "VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE,"+promo+","+deposit+",'"+currency+"',"+price+","+totalDeposits+");"
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
 	if(err) throw err;
