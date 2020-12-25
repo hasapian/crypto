@@ -124,13 +124,24 @@ app.post('/insertHolding', function (req,res) {
     var amount = req.body.amount;
     var coin = req.body.coins;
     var wallet = req.body.wallet;
-    var isInterest = req.body.isInterest;
     var interest = (req.body.isInterest == 'Yes') ? true : false;  
-    var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE)"
+    var promo = (req.body.isPromo == 'Yes') ? true : false; 
+    var deposit = req.body.deposit;
+    var currency = req.body.currency;
+    var price = req.body.price;
+    var totalDeposits = (req.body.totalDeposits == 'Yes') ? true : false; 
+    var sql;
+    if(interest)
+        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE)"
+    else if(promo)
+        sql = "INSERT INTO holdings (coin,amount,wallet,isPromo) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+promo+")"
+    else
+        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits)"+
+        "VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE,"+deposit+",'"+currency+"',"+price+","+totalDeposits+");"
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
-        if(err) throw err;
-        res.send("New holding has been added");
+	if(err) throw err;
+	res.send("New holding has been added");
 	});
 });
 
