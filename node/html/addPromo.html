@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Add Promo</title>
+</head>
+<body>
+	<form action="/insertPromo" method="POST">
+        <label for="amount">Enter Amount: </label>
+        <input type="text" id="amount" name="amount">
+        <select id="coins" name="coins">
+			<option value="BTC">BTC</option>
+			<option value="ETH">ETH</option>
+			<option value="LINK">LINK</option>
+			<option value="CRO">CRO</option>
+			<option value="MATIC">MATIC</option>
+			<option value="SXP">SXP</option>
+			<option value="CEL">CEL</option>
+			<option value="RSR">RSR</option>
+			<option value="VET">VET</option>
+			<option value="BLZ">BLZ</option>
+			<option value="DOT">DOT</option>
+            <option value="ADA">ADA</option>
+            <option value="UNI">UNI</option>
+            <option value="USDT">USDT</option>
+            <option value="EUR">EUR</option>
+	        <option value="GRT">GRT</option>
+        </select>
+        <select id="wallet" name="wallet">
+            <option value="Celsius">Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance">Binance</option>
+            <option value="Swipe">Swipe</option>
+        </select><br>
+		<input type="submit" value="Add promo">
+	</form>
+</body>
+</html>
