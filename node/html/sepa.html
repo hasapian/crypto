@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>SEPA Deposit</title>
+</head>
+<body>
+	<form action="/insertSepa" method="POST">
+        <label for="deposit">Enter Deposit: </label>
+        <input type="text" id="deposit" name="deposit">
+        <select id="wallet" name="wallet">
+            <option value="Celsius">Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance" selected>Binance</option>
+            <option value="Swipe">Swipe</option>
+        </select>
+		<input type="submit" value="SEPA Deposit">
+	</form>
+</body>
+</html>
