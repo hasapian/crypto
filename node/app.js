@@ -14,12 +14,9 @@ const priceIn = 'USD';
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 
-var usdtoeuro = 0.842525;
-var eurotousd = 1.21; //should never be used. Rate got from exchange
-
-//	         0     1     2	    3     4      5      6     7     8     9     10    11   12	 13
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT'];
 const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13};
+const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -62,7 +59,7 @@ app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
     res.write("<h1>Work In progress</h1>\n");
-    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'], convert: priceIn}).then((prices) => {
+    client.getQuotes({symbol: apiCoins, convert: priceIn}).then((prices) => {
         exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
             usdtoeuro = result.rate;
             db.query(sqlHoldings, function(err,result) {
@@ -100,10 +97,15 @@ app.get('/', (req,res) => {
                         res.write("Total Deposits: "+totalDeposits+"<br>");
                         res.write("<b>P&L: "+((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
                         res.write("("+stableOrFiat+" EURO in Fiat or Stablecoins)<br>");
-                        res.write('<a href="\add">Add holding</a><br>');
+                        res.write('<a href="\addInterest">Add Interest</a><br>');
+                        res.write('<a href="\addPromo">Add Promo</a><br>');
+                        res.write('<a href="\sepa">SEPA Deposit</a><br>');
+                        res.write('<a href="\\buyCrypto">Buy Crypto</a><br>');
                         res.write('<a href="\interest">Check interest</a><br>');
+                        res.write('<a href="\holdings">Check all holdings</a><br>');  
+                        res.write('<a href="\showAllInterest">Check all interest</a><br>');
+                        res.write('<a href="\showAllPromos">Check all promos</a><br>');
                         res.write('<a href="\\runSQL">Run SQL query</a><br>');
-			res.write('<a href="\holdings">Check all holdings</a><br>');                              
                         res.end();
                     } //end if
                 } //end for
@@ -113,35 +115,82 @@ app.get('/', (req,res) => {
 });
 
 
-app.get('/add', function (req,res) {
-	res.sendFile(path.join(__dirname,'./html/addHolding.html'));
+app.get('/addInterest', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/addInterest.html'));
+});
+
+app.get('/addPromo', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/addPromo.html'));
+});
+
+app.get('/buyCrypto', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/buyCrypto.html'));
+});
+
+app.get('/sepa', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/sepa.html'));
 });
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.post('/insertHolding', function (req,res) {
+app.post('/insertInterest', function (req,res) {
     var amount = req.body.amount;
     var coin = req.body.coins;
     var wallet = req.body.wallet;
-    var interest = (req.body.isInterest == 'Yes') ? true : false;  
-    var promo = (req.body.isPromo == 'Yes') ? true : false; 
+    var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date) VALUES ('"+coin+"',"+amount+",'"+wallet+"',true,CURRENT_DATE)"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+	if(err) throw err;
+	res.send("Interest added");
+	});
+});
+
+app.post('/insertPromo', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,date,isPromo) VALUES ('"+coin+"',"+amount+",'"+wallet+"',CURRENT_DATE,true)"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+	if(err) throw err;
+	res.send("Promo added");
+	});
+});
+
+app.post('/insertSepa', function (req,res) {
+    var amount = req.body.amount;
+    var wallet = req.body.wallet;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,date,deposit,depositCurrency,totalDeposits) VALUES ('EUR',"+amount+",'"+wallet+"',CURRENT_DATE,"+amount+",true)"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+	if(err) throw err;
+	res.send("SEPA added");
+	});
+});
+
+app.post('/insertPurchase', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
     var deposit = req.body.deposit;
     var currency = req.body.currency;
     var price = req.body.price;
     var totalDeposits = (req.body.totalDeposits == 'Yes') ? true : false; 
     var sql;
-    if(interest)
-        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE)"
-    else if(promo)
-        sql = "INSERT INTO holdings (coin,amount,wallet,isPromo) VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+promo+")"
-    else
+    if(totalDeposits) {
         sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits)"+
-        "VALUES ('"+coin+"',"+amount+",'"+wallet+"',"+interest+",CURRENT_DATE,"+promo+","+deposit+",'"+currency+"',"+price+","+totalDeposits+");"
+        "VALUES ('"+coin+"',"+amount+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",true);"
+    }
+    else {
+        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits)"+
+        "VALUES ('"+currency+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false),"+
+        "('"+coin+"',"+amount+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",false);"
+    }
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
-	if(err) throw err;
-	res.send("New holding has been added");
+        if(err) throw err;
+        res.send("Holdings updated");
 	});
 });
 
@@ -179,8 +228,7 @@ app.get('/monthInterest', function (req,res) {
     var option1 = "SELECT * FROM holdings WHERE isInterest = true AND MONTH(date) = MONTH(CURRENT_DATE)"
     var option2 = "SELECT * FROM holdings WHERE isInterest = true AND MONTH(date) = " +monthValue
     var sql = (typeof monthValue !== 'undefined' && monthValue ) ? option2 : option1;
-    //res.write(sql + "\n");
-    client.getQuotes({symbol: ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'], convert: 'EUR'}).then((prices) => {
+    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
         db.query(sql, function(err,result) {
             if(err) throw err;
             var sum = 0;
@@ -189,6 +237,38 @@ app.get('/monthInterest', function (req,res) {
                 sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
             }
             res.write("<br>Total Interest: " + sum);
+            res.end();
+        });
+    });
+});
+
+app.get('/showAllInterest', function (req,res) {
+    var sql = "SELECT * FROM holdings WHERE isInterest = true"
+    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
+        db.query(sql, function(err,result) {
+            if(err) throw err;
+            var sum = 0;
+            dataInTable(result,res);
+            for(i=0;i<result.length;i++) {
+                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+            }
+            res.write("<br>Total Interest: " + sum + " EUR");
+            res.end();
+        });
+    });
+});
+
+app.get('/showAllPromos', function (req,res) {
+    var sql = "SELECT * FROM holdings WHERE isPromo = true"
+    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
+        db.query(sql, function(err,result) {
+            if(err) throw err;
+            var sum = 0;
+            dataInTable(result,res);
+            for(i=0;i<result.length;i++) {
+                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+            }
+            res.write("<br>Promos Value: " + sum + " EUR");
             res.end();
         });
     });
@@ -204,6 +284,7 @@ app.post('/sqlquery', function (req,res) {
     db.query(sql, function(err,result) {
         if(err) throw err;
         dataInTable(result,res);
+        res.write("<br>Query executed");
         res.end();
     });
 });
