@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Transfer Crypto</title>
+</head>
+<body>
+	<form action="/transfer" method="POST">
+        <label for="amount">Transfer </label>
+		<input type="text" id="amount" name="amount">
+        <input type="text" size="3" id="coins" name="coins" value="UNI">
+        <label for="wallet">from </label>
+        <select id="wallet" name="wallet">
+            <option value="Celsius">Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance" selected>Binance</option>
+            <option value="Swipe">Swipe</option>
+        </select>
+        <label for="wallet">to </label>
+        <select id="wallet" name="wallet">
+            <option value="Celsius" selected>Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance">Binance</option>
+            <option value="Swipe">Swipe</option>
+        </select><br>
+        <label for="fee">Fees (optional): </label>
+        <input type="text" id="fee" name="fee"><br>
+		<input type="submit" value="Submit Transfer">
+	</form>
+</body>
+</html>
