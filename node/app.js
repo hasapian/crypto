@@ -101,6 +101,9 @@ app.get('/', (req,res) => {
                         res.write('<a href="\addPromo">Add Promo</a><br>');
                         res.write('<a href="\sepa">SEPA Deposit</a><br>');
                         res.write('<a href="\\buyCrypto">Buy Crypto</a><br>');
+                        res.write('<a href="\sellCrypto">Sell Crypto</a><br>');
+                        res.write('<a href="\\transferCrypto">Transfer Crypto</a><br>');
+                        res.write('<a href="\cardTransfer">Transfer to card</a><br>');
                         res.write('<a href="\interest">Check interest</a><br>');
                         res.write('<a href="\holdings">Check all holdings</a><br>');  
                         res.write('<a href="\showAllInterest">Check all interest</a><br>');
@@ -124,11 +127,23 @@ app.get('/addPromo', function (req,res) {
 });
 
 app.get('/buyCrypto', function (req,res) {
-	res.sendFile(path.join(__dirname,'./html/buyCrypto.html'));
+	res.sendFile(path.join(__dirname,'./html/buyCrypto2.html'));
+});
+
+app.get('/sellCrypto', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/sellCrypto.html'));
 });
 
 app.get('/sepa', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/sepa.html'));
+});
+
+app.get('/cardTransfer', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/cardTransfer.html'));
+});
+
+app.get('/transferCrypto', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/walletTransfer.html'));
 });
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -169,6 +184,22 @@ app.post('/insertSepa', function (req,res) {
 	});
 });
 
+app.post('/transfer', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
+    var wallet2 = req.body.wallet2;
+    var fees = req.body.fee;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,date,fees)"+
+        "VALUES ('"+coin+"',-"+amount+",'"+wallet+"',CURRENT_DATE,0),"+
+        "('"+coin+"',"+(amount-fees)+",'"+wallet2+"',CURRENT_DATE,"+fees+");"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+        if(err) throw err;
+        res.send("Transfer completed");
+	});
+});
+
 app.post('/insertPurchase', function (req,res) {
     var amount = req.body.amount;
     var coin = req.body.coins;
@@ -176,6 +207,7 @@ app.post('/insertPurchase', function (req,res) {
     var deposit = req.body.deposit;
     var currency = req.body.currency;
     var price = req.body.price;
+    var fees = req.body.fee;
     var totalDeposits = (req.body.totalDeposits == 'Yes') ? true : false; 
     var sql;
     if(totalDeposits) {
@@ -183,14 +215,59 @@ app.post('/insertPurchase', function (req,res) {
         "VALUES ('"+coin+"',"+amount+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",true);"
     }
     else {
-        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits)"+
-        "VALUES ('"+currency+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false),"+
-        "('"+coin+"',"+amount+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",false);"
+        sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
+        "VALUES ('"+currency+"',-"+deposit+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
+        "('"+coin+"',"+(amount-fees)+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",false,"+fees+");"
     }
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
         if(err) throw err;
         res.send("Holdings updated");
+	});
+});
+
+app.post('/insertSell', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
+    var amount2 = req.body.deposit;
+    var currency = req.body.currency;
+    var price = req.body.price;
+    var fees = req.body.fee;
+    var sql;
+    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
+        var cmcprice = prices.data[coin].quote.EUR.price;
+        console.log("CMC price: "+cmcprice);
+        if(currency == 'USDT' || currency == 'EUR') {
+            sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
+            "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
+            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+amount2+",'"+currency+"',"+price+",false,"+fees+");"
+        }
+        else {
+            var depositValue = amount * cmcprice;
+            console.log("Deposit value: "+depositValue);
+            sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
+            "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,"+depositValue+",'EUR',null,false,0),"+
+            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+depositValue+",'EUR',"+price+",false,"+fees+");"
+        }
+        console.log("sql: "+sql);
+        db.query(sql, function (err,result) {
+            if(err) throw err;
+            res.send("Holdings updated");
+        });
+    });
+});
+
+app.post('/insertCard', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var card = req.body.card;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,totalDeposits)"+
+        "VALUES ('"+coin+"',-"+amount+",'"+card+"',false,CURRENT_DATE,false,-"+amount+",'"+coin+"',true);"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+        if(err) throw err;
+        res.send("Card transfer completed");
 	});
 });
 
