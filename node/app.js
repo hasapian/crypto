@@ -58,7 +58,7 @@ function myFilltable(result,usdtoeuro) {
 app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
-    res.write("<h1>Work In progress</h1>\n");
+    res.write("<h1>Crypto</h1>\n");
     client.getQuotes({symbol: apiCoins, convert: priceIn}).then((prices) => {
         exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
             usdtoeuro = result.rate;
