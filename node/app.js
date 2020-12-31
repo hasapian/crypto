@@ -14,9 +14,9 @@ const priceIn = 'USD';
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 
-const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT'];
-const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13};
-const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT'];
+const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL'];
+const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14};
+const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -241,7 +241,7 @@ app.post('/insertSell', function (req,res) {
         if(currency == 'USDT' || currency == 'EUR') {
             sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
             "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
-            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+amount2+",'"+currency+"',"+price+",false,"+fees+");"
+            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+(amount2-fees)+",'"+currency+"',"+price+",false,"+fees+");"
         }
         else {
             var depositValue = amount * cmcprice;
