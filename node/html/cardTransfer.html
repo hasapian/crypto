@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Transfer to Card</title>
+</head>
+<body>
+	<form action="/insertCard" method="POST">
+        <label for="amount">Enter Amount: </label>
+        <input type="text" id="amount" name="amount">
+        <select id="coins" name="coins">
+			<option value="BTC">BTC</option>
+			<option value="ETH">ETH</option>
+			<option value="LINK">LINK</option>
+			<option value="CRO">CRO</option>
+			<option value="MATIC">MATIC</option>
+			<option value="SXP">SXP</option>
+			<option value="CEL">CEL</option>
+			<option value="RSR">RSR</option>
+			<option value="VET">VET</option>
+			<option value="BLZ">BLZ</option>
+			<option value="DOT">DOT</option>
+            <option value="ADA">ADA</option>
+            <option value="UNI">UNI</option>
+            <option value="USDT" selected>USDT</option>
+            <option value="EUR">EUR</option>
+	        <option value="GRT">GRT</option>
+        </select>
+        <select id="card" name="card">
+            <option value="Swipe Card" selected>Swipe Card</option>
+            <option value="MCO Card">MCO Card</option>
+        </select><br>
+		<input type="submit" value="Transfer to card">
+	</form>
+</body>
+</html>

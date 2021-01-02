@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Sell Crypto</title>
+</head>
+<body>
+	<form action="/insertSell" method="POST">
+        <label for="amount">Sold </label>
+        <input type="text" id="amount" name="amount">
+        <input type="text" size="3" id="coins" name="coins" value="UNI">
+        <select id="wallet" name="wallet">
+            <option value="Celsius">Celsius</option>
+            <option value="BlockFi">BlockFi</option>
+            <option value="Crypto">Crypto</option>
+            <option value="Binance" selected>Binance</option>
+            <option value="Swipe">Swipe</option>
+        </select><br>
+        <label for="deposit">for </label>
+        <input type="text" id="deposit" name="deposit">
+        <input type="text" size="3" id="currency" name="currency" value="USDT"><br>
+        <label for="price">Price (optional): </label>
+        <input type="text" id="price" name="price"><br>
+        <label for="fee">Fees (optional): </label>
+        <input type="text" id="fee" name="fee"><br>
+		<input type="submit" value="Submit Sell">
+	</form>
+</body>
+</html>

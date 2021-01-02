@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Add Holding</title>
+	<title>Add Interest</title>
 </head>
 <body>
-	<form action="/insertHolding" method="POST">
-		<label for="hodl">Enter data</label><br>
-		<input type="text" id="hodl" name="hodl">
-		<select id="coins" name="coins">
+	<form action="/insertInterest" method="POST">
+        <label for="amount">Enter Amount: </label>
+        <input type="text" id="amount" name="amount">
+        <select id="coins" name="coins">
 			<option value="BTC">BTC</option>
 			<option value="ETH">ETH</option>
 			<option value="LINK">LINK</option>
@@ -19,17 +19,20 @@
 			<option value="VET">VET</option>
 			<option value="BLZ">BLZ</option>
 			<option value="DOT">DOT</option>
-			<option value="ADA">ADA</option>
-        </select>    
+            <option value="ADA">ADA</option>
+            <option value="UNI">UNI</option>
+            <option value="USDT">USDT</option>
+            <option value="EUR">EUR</option>
+	        <option value="GRT">GRT</option>
+        </select>
         <select id="wallet" name="wallet">
             <option value="Celsius">Celsius</option>
             <option value="BlockFi">BlockFi</option>
             <option value="Crypto">Crypto</option>
             <option value="Binance">Binance</option>
-        </select>
-        <input type="checkbox" id="isInterest" name="isInterest" value="Yes">
-        <label for="interest"> Interest</label><br>
-		<input type="submit" value="Add holding">
+            <option value="Swipe">Swipe</option>
+        </select><br>
+		<input type="submit" value="Add interest">
 	</form>
 </body>
 </html>

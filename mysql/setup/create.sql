@@ -1,29 +1,14 @@
-CREATE TABLE deposits (
+CREATE TABLE holdings (
 	id INT unsigned NOT NULL AUTO_INCREMENT,
 	coin VARCHAR(150) NOT NULL,
-	amount DECIMAL(10,2) unsigned NOT NULL,
+	amount DECIMAL(19,8) NOT NULL,
+    wallet VARCHAR(150),
+    isInterest BOOLEAN,
+    date DATE,
+    isPromo BOOLEAN,
+    deposit DECIMAL(19,8),
+    depositCurrency VARCHAR(150),
+    price DECIMAL(19,8) unsigned,
+    totalDeposits BOOLEAN,
 	PRIMARY KEY (id)
-);
-
-CREATE TABLE posessions (
-	id INT unsigned NOT NULL AUTO_INCREMENT,
-	coin VARCHAR(150) NOT NULL,
-	amount DECIMAL(19,8) unsigned NOT NULL,
-	PRIMARY KEY (id)
-);
-
-CREATE TABLE trades (
-	id INT unsigned NOT NULL AUTO_INCREMENT,
-	coin VARCHAR(150) NOT NULL,
-	amount DECIMAL(19,8) unsigned NOT NULL,
-	PRIMARY KEY(id)
-);
-
-CREATE TABLE interest (
-	id INT unsigned NOT NULL AUTO_INCREMENT,
-	coin VARCHAR(150) NOT NULL,
-	amount DECIMAL(19,8) unsigned NOT NULL,
-	wallet VARCHAR(150) NOT NULL,
-	date DATE NOT NULL,
-	PRIMARY KEY(id)
 );
