@@ -5,6 +5,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const CoinMarketCap = require('coinmarketcap-api')
+const CoinGecko = require('coingecko-api')
 const createExchange = require('live-currency-exchange');
 
 const app = express();
@@ -13,10 +14,12 @@ const port = 80;
 const priceIn = 'USD';
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
+const CoinGeckoClient = new CoinGecko();
 
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE'];
 const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15};
 const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC'];
+const geckoIds = ['bitcoin','ethereum','chainlink'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -59,7 +62,8 @@ app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
     res.write("<h1>Crypto</h1>\n");
-    client.getQuotes({symbol: apiCoins, convert: priceIn}).then((prices) => {
+    //client.getQuotes({symbol: apiCoins, convert: priceIn}).then((prices) => {
+        CoinGeckoClient.simple.price({ids: geckoIds,vs_currencies: ['eur','usd'],}).then((prices) => {
         exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
             usdtoeuro = result.rate;
             db.query(sqlHoldings, function(err,result) {
@@ -69,28 +73,28 @@ app.get('/', (req,res) => {
                 holdings.fill(0);
                 myFilltable(result,usdtoeuro);
                 var sumOfPosessions = 0;
-                for(i=0;i<coins.length;i++){
-                    res.write("\n"+coins[i]);
+                for(i=0;i<geckoIds.length;i++){
+                    res.write("\n"+geckoIds[i]);
                     res.write("\nDeposits: "+(deposits[i]).toString()+"<br>");
                     res.write("\nHoldings: "+holdings[i].toString()+"<br>");
-                    cmcprice = prices.data[coins[i]].quote[priceIn].price;
-                    res.write("\nPrice: "+cmcprice.toString()+"<br>");
-                    var tempValue = (priceIn == 'USD') ? holdings[i] * cmcprice * usdtoeuro : holdings[i] * cmcprice;
+                    geckoprice = prices.data[geckoIds[i]].usd;
+                    res.write("\nPrice: "+geckoprice.toString()+"<br>");
+                    var tempValue = (priceIn == 'USD') ? holdings[i] * geckoprice * usdtoeuro : holdings[i] * geckoprice;
                     values[i] = tempValue;
                     res.write("\nProfit: "+(tempValue - deposits[i]).toString()+"<br>");
                     res.write("\n---------<br>");
                     sumOfPosessions += tempValue;
-                    if(i==(coins.length-1)) { 
+                    if(i==(geckoIds.length-1)) { 
                         res.write("Deposits:<br>")
-                        for(j=0;j<coins.length;j++) {
+                        for(j=0;j<geckoIds.length;j++) {
                             var percentage = ((deposits[j]) * 100) / (totalDeposits - stableOrFiat);
-                            res.write(coins[j]+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                            res.write(geckoIds[j]+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
                         }
                         res.write("---------<br>");
                         res.write("Portfolio<br>");
-                        for(j=0;j<coins.length;j++) {
+                        for(j=0;j<geckoIds.length;j++) {
                             var percentage = (values[j] * 100) / (sumOfPosessions);
-                            res.write(coins[j]+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                            res.write(geckoIds[j]+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
                         }
                         res.write("---------<br>");
                         res.write("Total Holdings Value: "+(sumOfPosessions + stableOrFiat)+"<br>");
