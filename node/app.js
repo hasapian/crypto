@@ -16,7 +16,7 @@ const client = new CoinMarketCap(apiKey)
 
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE'];
 const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15};
-const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT'];
+const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -33,7 +33,7 @@ function myFilltable(result,usdtoeuro) {
 
     for(i=0;i<result.length;i++) {
         var depositAmount = result[i].deposit;
-        if(result[i].depositCurrency == 'USDT')
+        if(result[i].depositCurrency == 'USDT' || result[i].depositCurrency == 'USDC')
             depositAmount = depositAmount * usdtoeuro;
         if(result[i].totalDeposits)
             totalDeposits+=depositAmount;
@@ -41,8 +41,8 @@ function myFilltable(result,usdtoeuro) {
         var coinIndex = CoinsEnum[result[i].coin];
         var amount = result[i].amount;
             
-        if(result[i].coin == 'USDT' || result[i].coin == 'EUR') {
-            if(result[i].coin == 'USDT')
+        if(result[i].coin == 'USDT' || result[i].coin == 'EUR' || result[i].coin == 'USDC') {
+            if(result[i].coin == 'USDT' || result[i].coin == 'USDC')
                 amount = amount * usdtoeuro;
             stableOrFiat+=amount;
         }
@@ -238,7 +238,7 @@ app.post('/insertSell', function (req,res) {
     client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
         var cmcprice = prices.data[coin].quote.EUR.price;
         console.log("CMC price: "+cmcprice);
-        if(currency == 'USDT' || currency == 'EUR') {
+        if(currency == 'USDT' || currency == 'EUR' || currency == 'USDC') {
             sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
             "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
             "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+(amount2-fees)+",'"+currency+"',"+price+",false,"+fees+");"
