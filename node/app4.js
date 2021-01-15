@@ -19,8 +19,8 @@ const CoinGeckoClient = new CoinGecko();
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE'];
 const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15};
 const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC'];
-const geckoIds = ['bitcoin','ethereum','polkadot','cardano','chainlink','celsius-degree-token','aave','vechain','crypto-com-chain','uniswap','matic-network',
-'swipe','reserve-rights-token','bluzelle','the-graph','the-graph'];
+const geckoIds = ['bitcoin','ethereum','chainlink','crypto-com-chain','swipe','matic-network','reserve-rights-token','polkadot','vechain','bluzelle','cardano',
+'celsius-degree-token','uniswap','the-graph','zilliqa','aave'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -78,7 +78,9 @@ app.get('/', (req,res) => {
                     res.write("\n"+geckoIds[i]);
                     res.write("\nDeposits: "+(deposits[i]).toString()+"<br>");
                     res.write("\nHoldings: "+holdings[i].toString()+"<br>");
-                    geckoprice = prices.data[geckoIds[i]].usd;
+                    console.log(i);
+		    console.log(prices.data[geckoIds[i]].usd);
+		    geckoprice = prices.data[geckoIds[i]].usd;
                     res.write("\nPrice: "+geckoprice.toString()+"<br>");
                     var tempValue = (priceIn == 'USD') ? holdings[i] * geckoprice * usdtoeuro : holdings[i] * geckoprice;
                     values[i] = tempValue;
