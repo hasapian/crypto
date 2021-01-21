@@ -16,11 +16,11 @@ const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 const CoinGeckoClient = new CoinGecko();
 
-const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE'];
-const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15};
-const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC'];
+const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE','XLM','SNX','COMP'];
+const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15,XLM:16,SNX:17,COMP:18};
+const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC,BUSD'];
 const geckoIds = ['bitcoin','ethereum','chainlink','crypto-com-chain','swipe','matic-network','reserve-rights-token','vechain','bluzelle','polkadot','cardano',
-'celsius-degree-token','uniswap','the-graph','zilliqa','aave'];
+'celsius-degree-token','uniswap','the-graph','zilliqa','aave','stellar','havven','compound-governance-token'];
 Object.freeze(CoinsEnum);
 var deposits = new Array(coins.length).fill(0);
 var holdings = new Array(coins.length).fill(0);
@@ -37,7 +37,7 @@ function myFilltable(result,usdtoeuro) {
 
     for(i=0;i<result.length;i++) {
         var depositAmount = result[i].deposit;
-        if(result[i].depositCurrency == 'USDT' || result[i].depositCurrency == 'USDC')
+        if(result[i].depositCurrency == 'USDT' || result[i].depositCurrency == 'USDC' || result[i].depositCurrency == 'BUSD')
             depositAmount = depositAmount * usdtoeuro;
         if(result[i].totalDeposits)
             totalDeposits+=depositAmount;
@@ -45,8 +45,8 @@ function myFilltable(result,usdtoeuro) {
         var coinIndex = CoinsEnum[result[i].coin];
         var amount = result[i].amount;
             
-        if(result[i].coin == 'USDT' || result[i].coin == 'EUR' || result[i].coin == 'USDC') {
-            if(result[i].coin == 'USDT' || result[i].coin == 'USDC')
+        if(result[i].coin == 'USDT' || result[i].coin == 'EUR' || result[i].coin == 'USDC' || result[i].coin == 'BUSD') {
+            if(result[i].coin == 'USDT' || result[i].coin == 'USDC' || result[i].coin == 'BUSD')
                 amount = amount * usdtoeuro;
             stableOrFiat+=amount;
         }
@@ -115,6 +115,7 @@ app.get('/', (req,res) => {
                         res.write('<a href="\holdings">Check all holdings</a><br>');  
                         res.write('<a href="\showAllInterest">Check all interest</a><br>');
                         res.write('<a href="\showAllPromos">Check all promos</a><br>');
+                        res.write('<a href="\cardTransfers">Check all card transfers</a><br>');
                         //res.write('<a href="\\runSQL">Run SQL query</a><br>');
                         res.end();
                     } //end if
@@ -245,7 +246,7 @@ app.post('/insertSell', function (req,res) {
     client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
         var cmcprice = prices.data[coin].quote.EUR.price;
         console.log("CMC price: "+cmcprice);
-        if(currency == 'USDT' || currency == 'EUR' || currency == 'USDC') {
+        if(currency == 'USDT' || currency == 'EUR' || currency == 'USDC' || currency == 'BUSD') {
             sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
             "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
             "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+(amount2-fees)+",'"+currency+"',"+price+",false,"+fees+");"
@@ -300,6 +301,21 @@ app.get('/holdings', function (req,res) {
         if(err) throw err;
         dataInTable(result,res);
         res.end();
+    });
+});
+
+app.get('/cardTransfers', function (req,res) {
+    var sum=0;
+    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
+        db.query("SELECT * FROM holdings WHERE wallet='Swipe Card'", function(err,result) {
+            if(err) throw err;
+            dataInTable(result,res);
+            for(i=0;i<result.length;i++) {
+                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+            }
+            res.write("<br>Total Amount: " + sum + " EUR");
+            res.end();
+        });
     });
 });
 
@@ -364,8 +380,6 @@ app.get('/showAllPromos', function (req,res) {
 app.get('/runsql', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/runSQL.html'));
 });
-
-
 app.post('/sqlquery', function (req,res) {
     var sql = req.body.sql;
     db.query(sql, function(err,result) {
