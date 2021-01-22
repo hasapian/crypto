@@ -184,7 +184,7 @@ app.post('/insertPromo', function (req,res) {
 app.post('/insertSepa', function (req,res) {
     var amount = req.body.amount;
     var wallet = req.body.wallet;
-    var sql = "INSERT INTO holdings (coin,amount,wallet,date,deposit,depositCurrency,totalDeposits) VALUES ('EUR',"+amount+",'"+wallet+"',CURRENT_DATE,"+amount+",true)"
+    var sql = "INSERT INTO holdings (coin,amount,wallet,date,deposit,depositCurrency,totalDeposits) VALUES ('EUR',"+amount+",'"+wallet+"',CURRENT_DATE,"+(amount+1)+",'EUR',true)"
 	console.log("sql: "+sql);
 	db.query(sql, function (err,result) {
 	if(err) throw err;
