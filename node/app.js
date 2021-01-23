@@ -18,7 +18,7 @@ const CoinGeckoClient = new CoinGecko();
 
 const coins = ['BTC','ETH','LINK','CRO','SXP','MATIC','RSR','VET','BLZ','DOT','ADA','CEL','UNI','GRT','ZIL','AAVE','XLM','SNX','COMP'];
 const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15,XLM:16,SNX:17,COMP:18};
-const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC,BUSD'];
+const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC,BUSD,XLM,SNX,COMP'];
 const geckoIds = ['bitcoin','ethereum','chainlink','crypto-com-chain','swipe','matic-network','reserve-rights-token','vechain','bluzelle','polkadot','cardano',
 'celsius-degree-token','uniswap','the-graph','zilliqa','aave','stellar','havven','compound-governance-token'];
 Object.freeze(CoinsEnum);
@@ -111,6 +111,7 @@ app.get('/', (req,res) => {
                         res.write('<a href="\sellCrypto">Sell Crypto</a><br>');
                         res.write('<a href="\\transferCrypto">Transfer Crypto</a><br>');
                         res.write('<a href="\cardTransfer">Transfer to card</a><br>');
+                        res.write('<a href="\cardBack">Transfer from card</a><br>');
                         res.write('<a href="\interest">Check interest</a><br>');
                         res.write('<a href="\holdings">Check all holdings</a><br>');  
                         res.write('<a href="\showAllInterest">Check all interest</a><br>');
@@ -148,6 +149,10 @@ app.get('/sepa', function (req,res) {
 
 app.get('/cardTransfer', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/cardTransfer.html'));
+});
+
+app.get('/cardBack', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/cardBack.html'));
 });
 
 app.get('/transferCrypto', function (req,res) {
@@ -277,6 +282,19 @@ app.post('/insertCard', function (req,res) {
 	db.query(sql, function (err,result) {
         if(err) throw err;
         res.send("Card transfer completed");
+	});
+});
+
+app.post('/tranferBack', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var card = req.body.wallet;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,totalDeposits)"+
+        "VALUES ('"+coin+"',"+amount+",'"+card+"',false,CURRENT_DATE,false,"+amount+",'"+coin+"',true);"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+        if(err) throw err;
+        res.send("Tranfer from card completed");
 	});
 });
 
