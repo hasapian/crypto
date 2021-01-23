@@ -67,15 +67,19 @@ app.get('/', (req,res) => {
     res.write("<h1>Crypto</h1>\n");
     db.query(sqlCoins, function(err,mycoins) {
         if(err) throw err;
+	coins = [];
+	index = [];
         deposits = new Array(mycoins.length).fill(0);
         holdings = new Array(mycoins.length).fill(0);
         values = new Array(mycoins.length).fill(0);
-        for(x in mycoins){
-            coins.push(x.coin);
-            index.push(x.id);
-        }
+        mycoins.forEach(function(coin) {
+            coins.push(coin.coin);
+            index.push(coin.id);
+        });
+	console.log("Koukou");
         console.log(coins);
         console.log(index);
+	console.log(deposits);
         CoinGeckoClient.simple.price({ids: geckoIds,vs_currencies: ['eur','usd'],}).then((prices) => {
             exchange.convert({source: 'USD', target: 'EUR'}).then((result) => {
                 usdtoeuro = result.rate;
