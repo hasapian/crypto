@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Transfer from Card</title>
+</head>
+<body>
+	<form action="/tranferBack" method="POST">
+        <label for="amount">Enter Amount: </label>
+        <input type="text" id="amount" name="amount">
+        <input type="text" size="3" id="coins" name="coins" value="BUSD">
+        <select id="wallet" name="wallet">
+            <option value="Binance" selected>Binance</option>
+            <option value="Crypto">Crypto</option>
+        </select><br>
+		<input type="submit" value="Transfer from card">
+	</form>
+</body>
+</html>
