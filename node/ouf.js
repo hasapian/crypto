@@ -37,25 +37,40 @@ con.query("select * from coins", function(err,result) {
                 unfound.push(data[j])
             }
         }
-	console.log("Found:");
-	console.log(coinIds);
+	    console.log("Found:");
+	    console.log(coinIds);
         console.log("Unfound:");
         console.log(unfound);
-        CoinGeckoClient.coins.markets({per_page:[250],page:[2]}).then((markets2) => {
-            for(j=0;j<unfound.length;j++) {
-                i=0;
-                found=false;
-                while((i < markets2.data.length) && (found == false)) {
-                    if(markets2.data[i].symbol == unfound[j].coin.toLowerCase()) {
-                        found = true;
-                        coinIds.push(markets2.data[i].id);
-                        console.log("In loop2");
-                        console.log(coinIds);
+        if(unfound.length > 0) {
+            CoinGeckoClient.coins.markets({per_page:[250],page:[2]}).then((markets2) => {
+                for(j=0;j<unfound.length;j++) {
+                    i=0;
+                    found=false;
+                    while((i < markets2.data.length) && (found == false)) {
+                        if(markets2.data[i].symbol == unfound[j].coin.toLowerCase()) {
+                            found = true;
+                            coinIds.push(markets2.data[i].id);
+                        }
+                        i++;
                     }
-                    i++;
                 }
-            }
-        }).catch(console.error)
+                CoinGeckoClient.simple.price({
+                    ids:[coinIds],
+                    vs_currencies:['usd']
+                }).then((result) => {
+                    console.log(result.data);
+		    console.log(result.data[coinIds[0]].usd);
+                }).catch(console.error)
+            }).catch(console.error)
+        } else {
+            CoinGeckoClient.simple.price({
+                ids:[coinIds],
+                vs_currencies:['usd']
+            }).then((result) => {
+		console.log(result.data);
+                console.log(result.data[coinIds[0]].usd);
+            }).catch(console.error)
+        }
     }).catch(console.error)
 });
 
