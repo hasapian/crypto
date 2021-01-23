@@ -14,7 +14,7 @@ var con = mysql.createConnection({
 con.connect(function(err) {
   if (err) throw err;
 });
-
+/*
 con.query("select * from coins", function(err,result) {
 	if(err) throw err;
 	console.log(result);
@@ -44,5 +44,5 @@ con.query("select * from coins", function(err,result) {
 	  }).catch(console.error)
 	}).catch(console.error)
 });
-
+*/
 module.exports = con;
