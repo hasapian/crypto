@@ -46,6 +46,7 @@ function myFilltable(result,usdtoeuro) {
 
         //var coinIndex = CoinsEnum[result[i].coin];
         var coinIndex = coinIndexes[result[i].coin];
+	console.log("Coin: "+result[i].coin+" Id: "+coinIndex);
         var amount = result[i].amount;
             
         if(result[i].coin == 'USDT' || result[i].coin == 'EUR' || result[i].coin == 'USDC' || result[i].coin == 'BUSD') {
