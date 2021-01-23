@@ -106,7 +106,7 @@ app.get('/', (req,res) => {
                         if(markets2.data[i].symbol == unfound[j].toLowerCase()) {
                             found = true;
                             geckoIds.push(markets2.data[i].id);
-                            coinIndexes[coins[j]] = geckoIndex;
+                            coinIndexes[unfound[j]] = geckoIndex;
                             geckoIndex++;
                         }
                         i++;
