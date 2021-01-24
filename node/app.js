@@ -1,5 +1,3 @@
-const http = require('http');
-const fs = require('fs');
 const db = require('./verify.js');
 const express = require('express');
 const path = require('path');
@@ -7,31 +5,21 @@ const bodyParser = require('body-parser');
 const CoinMarketCap = require('coinmarketcap-api')
 const CoinGecko = require('coingecko-api')
 const createExchange = require('live-currency-exchange');
-const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
 
 const app = express();
 const exchange = createExchange();
 const port = 80;
-const priceIn = 'USD';
 const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 const CoinGeckoClient = new CoinGecko();
 
-//const CoinsEnum = {BTC:0,ETH:1,LINK:2,CRO:3,SXP:4,MATIC:5,RSR:6,VET:7,BLZ:8,DOT:9,ADA:10,CEL:11,UNI:12,GRT:13,ZIL:14,AAVE:15,XLM:16,SNX:17,COMP:18};
-const apiCoins = ['BTC,ETH,LINK,CRO,SXP,MATIC,RSR,DOT,VET,BLZ,ADA,CEL,UNI,GRT,ZIL,AAVE,USDT,USDC,BUSD,XLM,SNX,COMP'];
-/*const geckoIds = ['bitcoin','ethereum','chainlink','crypto-com-chain','swipe','matic-network','reserve-rights-token','vechain','bluzelle','polkadot','cardano',
-'celsius-degree-token','uniswap','the-graph','zilliqa','aave','stellar','havven','compound-governance-token'];*/
-//Object.freeze(CoinsEnum);
-
-
+const stablecoins = ['USDT','USDC','BUSD'];
 const sqlHoldings = "SELECT * FROM holdings"
 const sqlCoins = "SELECT * FROM coins"
 
 var geckoIndex;
 var totalDeposits,stableOrFiat;
 var deposits,holdings,values;
-var coins = [];
-var geckoIds = [];
 var coinIndexes = {};
 
 function myFilltable(result,usdtoeuro) {
@@ -40,32 +28,29 @@ function myFilltable(result,usdtoeuro) {
 
     for(i=0;i<result.length;i++) {
         var depositAmount = result[i].deposit;
-        if(result[i].depositCurrency == 'USDT' || result[i].depositCurrency == 'USDC' || result[i].depositCurrency == 'BUSD')
+        if(stablecoins.includes(result[i].depositCurrency))
             depositAmount = depositAmount * usdtoeuro;
         if(result[i].totalDeposits)
             totalDeposits+=depositAmount;
 
-        //var coinIndex = CoinsEnum[result[i].coin];
         var coinIndex = coinIndexes[result[i].coin];
         var amount = result[i].amount;
             
-        if(result[i].coin == 'USDT' || result[i].coin == 'EUR' || result[i].coin == 'USDC' || result[i].coin == 'BUSD') {
-            if(result[i].coin == 'USDT' || result[i].coin == 'USDC' || result[i].coin == 'BUSD')
+        if(result[i].coin == 'EUR' || stablecoins.includes(result[i].coin)) {
+            if(stablecoins.includes(result[i].coin))
                 amount = amount * usdtoeuro;
             stableOrFiat+=amount;
         }
         else {
             holdings[coinIndex]+=amount;
             deposits[coinIndex]+=depositAmount;
-        }
-            
+        }    
     }
-
 }
 
 function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
-  }
+}
 
 app.get('/', (req,res) => {
     res.statusCode = 200;
@@ -74,7 +59,8 @@ app.get('/', (req,res) => {
     db.query(sqlCoins, function(err,mycoins) {
         if(err) throw err;
         geckoIndex = 0;
-        coins = [];
+        var coins = [];
+        var geckoIds = [];
         coinIndexes = {};
         deposits = new Array(mycoins.length).fill(0);
         holdings = new Array(mycoins.length).fill(0);
@@ -83,7 +69,6 @@ app.get('/', (req,res) => {
             coins.push(coin.coin);
         });
         var unfound = [];
-        geckoIds = [];
         CoinGeckoClient.coins.markets({per_page:[250],page:[1]}).then((markets) => {
             for(j=0;j<coins.length;j++) {
                 i=0;
@@ -128,56 +113,62 @@ app.get('/', (req,res) => {
                             holdings.fill(0);
                             myFilltable(result,usdtoeuro);
                             var sumOfPosessions = 0;
-                            for(i=0;i<geckoIds.length;i++){
+                            for(i=0;i<geckoIds.length;i++) {
                                 var coinName = getKeyByValue(coinIndexes,i);
                                 console.log(coinName);
-                                res.write("\n"+coinName);
-                                res.write("\nDeposits: "+(deposits[i]).toString()+"<br>");
-                                res.write("\nHoldings: "+holdings[i].toString()+"<br>");
-                                //console.log(i);
-                                //console.log(prices.data[geckoIds[i]].usd);
-                                geckoprice = prices.data[geckoIds[i]].usd;
-                                res.write("\nPrice: "+geckoprice.toString()+"<br>");
-                                var tempValue = (priceIn == 'USD') ? holdings[i] * geckoprice * usdtoeuro : holdings[i] * geckoprice;
-                                values[i] = tempValue;
-                                res.write("\nProfit: "+(tempValue - deposits[i]).toString()+"<br>");
-                                res.write("\n---------<br>");
-                                sumOfPosessions += tempValue;
-                                if(i==(geckoIds.length-1)) { 
-                                    res.write("Deposits:<br>")
-                                    for(j=0;j<geckoIds.length;j++) {
-                                        coinName = getKeyByValue(coinIndexes,j);
-                                        var percentage = ((deposits[j]) * 100) / (totalDeposits - stableOrFiat);
-                                        res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
-                                    }
-                                    res.write("---------<br>");
-                                    res.write("Portfolio<br>");
-                                    for(j=0;j<geckoIds.length;j++) {
-                                        coinName = getKeyByValue(coinIndexes,j);
-                                        var percentage = (values[j] * 100) / (sumOfPosessions);
-                                        res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
-                                    }
-                                    res.write("---------<br>");
-                                    res.write("Total Holdings Value: "+(sumOfPosessions + stableOrFiat)+"<br>");
-                                    res.write("Total Deposits: "+totalDeposits+"<br>");
-                                    res.write("<b>P&L: "+((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
-                                    res.write("("+stableOrFiat+" EURO in Fiat or Stablecoins)<br>");
-                                    res.write('<a href="\addInterest">Add Interest</a><br>');
-                                    res.write('<a href="\addPromo">Add Promo</a><br>');
-                                    res.write('<a href="\sepa">SEPA Deposit</a><br>');
-                                    res.write('<a href="\\buyCrypto">Buy Crypto</a><br>');
-                                    res.write('<a href="\sellCrypto">Sell Crypto</a><br>');
-                                    res.write('<a href="\\transferCrypto">Transfer Crypto</a><br>');
-                                    res.write('<a href="\cardTransfer">Transfer to card</a><br>');
-                                    res.write('<a href="\cardBack">Transfer from card</a><br>');
-                                    res.write('<a href="\interest">Check interest</a><br>');
-                                    res.write('<a href="\holdings">Check all holdings</a><br>');  
-                                    res.write('<a href="\showAllInterest">Check all interest</a><br>');
-                                    res.write('<a href="\showAllPromos">Check all promos</a><br>');
-                                    res.write('<a href="\cardTransfers">Check all card transfers</a><br>');
-                                    //res.write('<a href="\\runSQL">Run SQL query</a><br>');
-                                    res.end();
-                                } //end if
+                                if(!stablecoins.includes(coinName)) {
+                                    res.write("\n"+coinName);
+                                    res.write("\nDeposits: "+(deposits[i]).toString()+"<br>");
+                                    res.write("\nHoldings: "+holdings[i].toString()+"<br>");
+                                    //console.log(i);
+                                    //console.log(prices.data[geckoIds[i]].usd);
+                                    geckoprice = prices.data[geckoIds[i]].usd;
+                                    res.write("\nPrice: "+geckoprice.toString()+"<br>");
+                                    var tempValue = holdings[i] * geckoprice * usdtoeuro;
+                                    values[i] = tempValue;
+                                    res.write("\nProfit: "+(tempValue - deposits[i]).toString()+"<br>");
+                                    res.write("\n---------<br>");
+                                    sumOfPosessions += tempValue;
+                                    if(i==(geckoIds.length-1)) { 
+                                        res.write("Deposits:<br>")
+                                        for(j=0;j<geckoIds.length;j++) {
+                                            coinName = getKeyByValue(coinIndexes,j);
+                                            if(!stablecoins.includes(coinName)) {
+                                                var percentage = ((deposits[j]) * 100) / (totalDeposits - stableOrFiat);
+                                                res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                                            }
+                                        }
+                                        res.write("---------<br>");
+                                        res.write("Portfolio<br>");
+                                        for(j=0;j<geckoIds.length;j++) {
+                                            coinName = getKeyByValue(coinIndexes,j);
+                                            if(!stablecoins.includes(coinName)) {
+                                                var percentage = (values[j] * 100) / (sumOfPosessions);
+                                                res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                                            }
+                                        }
+                                        res.write("---------<br>");
+                                        res.write("Total Holdings Value: "+(sumOfPosessions + stableOrFiat)+"<br>");
+                                        res.write("Total Deposits: "+totalDeposits+"<br>");
+                                        res.write("<b>P&L: "+((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
+                                        res.write("("+stableOrFiat+" EURO in Fiat or Stablecoins)<br>");
+                                        res.write('<a href="\addInterest">Add Interest</a><br>');
+                                        res.write('<a href="\addPromo">Add Promo</a><br>');
+                                        res.write('<a href="\sepa">SEPA Deposit</a><br>');
+                                        res.write('<a href="\\buyCrypto">Buy Crypto</a><br>');
+                                        res.write('<a href="\sellCrypto">Sell Crypto</a><br>');
+                                        res.write('<a href="\\transferCrypto">Transfer Crypto</a><br>');
+                                        res.write('<a href="\cardTransfer">Transfer to card</a><br>');
+                                        res.write('<a href="\cardBack">Transfer from card</a><br>');
+                                        res.write('<a href="\interest">Check interest</a><br>');
+                                        res.write('<a href="\holdings">Check all holdings</a><br>');  
+                                        res.write('<a href="\showAllInterest">Check all interest</a><br>');
+                                        res.write('<a href="\showAllPromos">Check all promos</a><br>');
+                                        res.write('<a href="\cardTransfers">Check all card transfers</a><br>');
+                                        //res.write('<a href="\\runSQL">Run SQL query</a><br>');
+                                        res.end();
+                                    } //end if
+                                } //end if not stablecoin
                             } //end for
                         });
                     }).catch(console.error)  //exchange
@@ -310,25 +301,32 @@ app.post('/insertSell', function (req,res) {
     var price = req.body.price;
     var fees = req.body.fee;
     var sql;
-    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
-        var cmcprice = prices.data[coin].quote.EUR.price;
-        console.log("CMC price: "+cmcprice);
-        if(currency == 'USDT' || currency == 'EUR' || currency == 'USDC' || currency == 'BUSD') {
-            sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
-            "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
-            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+(amount2-fees)+",'"+currency+"',"+price+",false,"+fees+");"
-        }
-        else {
-            var depositValue = amount * cmcprice;
-            console.log("Deposit value: "+depositValue);
-            sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
-            "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,"+depositValue+",'EUR',null,false,0),"+
-            "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+depositValue+",'EUR',"+price+",false,"+fees+");"
-        }
-        console.log("sql: "+sql);
-        db.query(sql, function (err,result) {
-            if(err) throw err;
-            res.send("Holdings updated");
+    var mycoins = [];
+    db.query(sqlCoins, function(err,coins) {
+        if(err) throw err;
+        coins.forEach(function(coin) {
+            mycoins.push(coin.coin);
+        });
+        client.getQuotes({symbol: mycoins, convert: 'EUR'}).then((prices) => {
+            var cmcprice = prices.data[coin].quote.EUR.price;
+            console.log("CMC price: "+cmcprice);
+            if(currency == 'EUR' || stablecoins.includes(currency)) {
+                sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
+                "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
+                "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+(amount2-fees)+",'"+currency+"',"+price+",false,"+fees+");"
+            }
+            else {
+                var depositValue = amount * cmcprice;
+                console.log("Deposit value: "+depositValue);
+                sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
+                "VALUES ('"+currency+"',"+(amount2-fees)+",'"+wallet+"',false,CURRENT_DATE,false,"+depositValue+",'EUR',null,false,0),"+
+                "('"+coin+"',-"+amount+",'"+wallet+"',false,CURRENT_DATE,false,-"+depositValue+",'EUR',"+price+",false,"+fees+");"
+            }
+            console.log("sql: "+sql);
+            db.query(sql, function (err,result) {
+                if(err) throw err;
+                res.send("Holdings updated");
+            });
         });
     });
 });
@@ -386,15 +384,22 @@ app.get('/holdings', function (req,res) {
 
 app.get('/cardTransfers', function (req,res) {
     var sum=0;
-    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
-        db.query("SELECT * FROM holdings WHERE wallet='Swipe Card'", function(err,result) {
-            if(err) throw err;
-            dataInTable(result,res);
-            for(i=0;i<result.length;i++) {
-                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
-            }
-            res.write("<br>Total Amount: " + sum + " EUR");
-            res.end();
+    var mycoins = [];
+    db.query(sqlCoins, function(err,coins) {
+        if(err) throw err;
+        coins.forEach(function(coin) {
+            mycoins.push(coin.coin);
+        });
+        client.getQuotes({symbol: mycoins, convert: 'EUR'}).then((prices) => {
+            db.query("SELECT * FROM holdings WHERE wallet='Swipe Card' or wallet='MCO Card'", function(err,result) {
+                if(err) throw err;
+                dataInTable(result,res);
+                for(i=0;i<result.length;i++) {
+                    sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+                }
+                res.write("<br>Total Amount: " + sum + " EUR");
+                res.end();
+            });
         });
     });
 });
@@ -408,49 +413,69 @@ app.get('/monthInterest', function (req,res) {
     var option1 = "SELECT * FROM holdings WHERE isInterest = true AND MONTH(date) = MONTH(CURRENT_DATE)"
     var option2 = "SELECT * FROM holdings WHERE isInterest = true AND MONTH(date) = " +monthValue
     var sql = (typeof monthValue !== 'undefined' && monthValue ) ? option2 : option1;
-    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
-        db.query(sql, function(err,result) {
-            if(err) throw err;
-            var sum = 0;
-            dataInTable(result,res);
-            for(i=0;i<result.length;i++) {
-//		if(result[i].coin != 'USDT')
-	            sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
-            }
-            res.write("<br>Total Interest: " + sum);
-            res.end();
+    var mycoins = [];
+    db.query(sqlCoins, function(err,coins) {
+        if(err) throw err;
+        coins.forEach(function(coin) {
+            mycoins.push(coin.coin);
+        });
+        client.getQuotes({symbol: mycoins, convert: 'EUR'}).then((prices) => {
+            db.query(sql, function(err,result) {
+                if(err) throw err;
+                var sum = 0;
+                dataInTable(result,res);
+                for(i=0;i<result.length;i++) {
+                    sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+                }
+                res.write("<br>Total Interest: " + sum);
+                res.end();
+            });
         });
     });
 });
 
 app.get('/showAllInterest', function (req,res) {
     var sql = "SELECT * FROM holdings WHERE isInterest = true"
-    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
-        db.query(sql, function(err,result) {
-            if(err) throw err;
-            var sum = 0;
-            dataInTable(result,res);
-            for(i=0;i<result.length;i++) {
-                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
-            }
-            res.write("<br>Total Interest: " + sum + " EUR");
-            res.end();
+    var mycoins = [];
+    db.query(sqlCoins, function(err,coins) {
+        if(err) throw err;
+        coins.forEach(function(coin) {
+            mycoins.push(coin.coin);
+        });
+        client.getQuotes({symbol: mycoins, convert: 'EUR'}).then((prices) => {
+            db.query(sql, function(err,result) {
+                if(err) throw err;
+                var sum = 0;
+                dataInTable(result,res);
+                for(i=0;i<result.length;i++) {
+                    sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+                }
+                res.write("<br>Total Interest: " + sum + " EUR");
+                res.end();
+            });
         });
     });
 });
 
 app.get('/showAllPromos', function (req,res) {
-    var sql = "SELECT * FROM holdings WHERE isPromo = true"
-    client.getQuotes({symbol: apiCoins, convert: 'EUR'}).then((prices) => {
-        db.query(sql, function(err,result) {
-            if(err) throw err;
-            var sum = 0;
-            dataInTable(result,res);
-            for(i=0;i<result.length;i++) {
-                sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
-            }
-            res.write("<br>Promos Value: " + sum + " EUR");
-            res.end();
+    var sql = "SELECT * FROM holdings WHERE isPromo = true";
+    var mycoins = [];
+    db.query(sqlCoins, function(err,coins) {
+        if(err) throw err;
+        coins.forEach(function(coin) {
+            mycoins.push(coin.coin);
+        });
+        client.getQuotes({symbol: mycoins, convert: 'EUR'}).then((prices) => {
+            db.query(sql, function(err,result) {
+                if(err) throw err;
+                var sum = 0;
+                dataInTable(result,res);
+                for(i=0;i<result.length;i++) {
+                    sum += result[i].amount * prices.data[result[i].coin].quote.EUR.price;
+                }
+                res.write("<br>Promos Value: " + sum + " EUR");
+                res.end();
+            });
         });
     });
 });
