@@ -21,8 +21,9 @@ var geckoIndex;
 var totalDeposits,stableOrFiat;
 var deposits,holdings,values;
 var coinIndexes = {};
+var symbolId = {};
 
-function myFilltable(result,usdtoeuro) {
+function myFilltable(result,usdtoeuro,prices) {
     totalDeposits = 0;
     stableOrFiat = 0;
 
@@ -30,6 +31,13 @@ function myFilltable(result,usdtoeuro) {
         var depositAmount = result[i].deposit;
         if(stablecoins.includes(result[i].depositCurrency))
             depositAmount = depositAmount * usdtoeuro;
+        else {
+	    if((result[i].depositCurrency != 'EUR') && (result[i].depositCurrency != null)) {
+	         var geckoprice = prices.data[symbolId[result[i].depositCurrency]].eur;
+           	 depositAmount = depositAmount * geckoprice;
+	    }
+        }
+            
         if(result[i].totalDeposits)
             totalDeposits+=depositAmount;
 
@@ -62,6 +70,7 @@ app.get('/', (req,res) => {
         var coins = [];
         var geckoIds = [];
         coinIndexes = {};
+        symbolId = {};
         deposits = new Array(mycoins.length).fill(0);
         holdings = new Array(mycoins.length).fill(0);
         values = new Array(mycoins.length).fill(0);
@@ -78,6 +87,7 @@ app.get('/', (req,res) => {
                         found = true;
                         geckoIds.push(markets.data[i].id);
                         coinIndexes[coins[j]] = geckoIndex;
+                        symbolId[coins[j]] = markets.data[i].id;
                         geckoIndex++;
                     }
                     i++;
@@ -96,6 +106,7 @@ app.get('/', (req,res) => {
                             found = true;
                             geckoIds.push(markets2.data[i].id);
                             coinIndexes[unfound[j]] = geckoIndex;
+                            symbolId[unfound[j]] = markets2.data[i].id;
                             geckoIndex++;
                         }
                         i++;
@@ -111,7 +122,7 @@ app.get('/', (req,res) => {
                             holdingsResult = result;
                             deposits.fill(0);
                             holdings.fill(0);
-                            myFilltable(result,usdtoeuro);
+                            myFilltable(result,usdtoeuro,prices);
                             var sumOfPosessions = 0;
                             for(i=0;i<geckoIds.length;i++) {
                                 var coinName = getKeyByValue(coinIndexes,i);
@@ -289,6 +300,23 @@ app.post('/insertPurchase', function (req,res) {
 	db.query(sql, function (err,result) {
         if(err) throw err;
         res.send("Holdings updated");
+    });
+    db.query(sqlCoins, function (err,coins) {
+        if(err) throw err;
+        var i=0;
+        var found = false;
+        while((i<coins.length) && (found == false)) {
+            if(coins[i].coin == coin)
+                found = true;
+            i++;
+        }
+        if(!found) {
+            var sql2 = "INSERT INTO coins (id,coin) VALUES ("+i+",'"+coin+"');"
+            console.log(sql2);
+            db.query(sql2, function (err,result) {
+                if(err) throw err;
+            });
+        }
 	});
 });
 
