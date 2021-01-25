@@ -58,6 +58,10 @@ function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
 }
 
+function myround(x) {
+    return (Math.round((x + Number.EPSILON) * 100) /100);
+}
+
 app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
@@ -125,14 +129,14 @@ app.get('/', (req,res) => {
                             console.log(coinName);
                             if(!stablecoins.includes(coinName)) {
                                 res.write("\n"+coinName);
-                                res.write("\nDeposits: "+(deposits[i]).toString()+"<br>");
+                                res.write("\nDeposits: "+(myround(deposits[i])).toString()+"<br>");
                                 res.write("\nHoldings: "+holdings[i].toString()+"<br>");
                                 geckoprice = prices.data[geckoIds[i]].usd;
                                 geckoprice2 = prices.data[geckoIds[i]].eur;
                                 res.write("\nPrice: "+geckoprice.toString()+"<br>");
                                 var tempValue = holdings[i] * geckoprice2;
                                 values[i] = tempValue;
-                                res.write("\nProfit: "+(tempValue - deposits[i]).toString()+"<br>");
+                                res.write("\nProfit: "+(myround(tempValue - deposits[i])).toString()+"<br>");
                                 res.write("\n---------<br>");
                                 sumOfPosessions += tempValue;
                                 if(i==(geckoIds.length-1)) { 
@@ -141,7 +145,7 @@ app.get('/', (req,res) => {
                                         coinName = getKeyByValue(coinIndexes,j);
                                         if(!stablecoins.includes(coinName)) {
                                             var percentage = ((deposits[j]) * 100) / (totalDeposits - stableOrFiat);
-                                            res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                                            res.write(coinName+": "+myround(percentage)+"%<br>");
                                         }
                                     }
                                     res.write("---------<br>");
@@ -150,14 +154,14 @@ app.get('/', (req,res) => {
                                         coinName = getKeyByValue(coinIndexes,j);
                                         if(!stablecoins.includes(coinName)) {
                                             var percentage = (values[j] * 100) / (sumOfPosessions);
-                                            res.write(coinName+": "+Math.round((percentage + Number.EPSILON) * 100) / 100+"%<br>");
+                                            res.write(coinName+": "+myround(percentage)+"%<br>");
                                         }
                                     }
                                     res.write("---------<br>");
-                                    res.write("Total Holdings Value: "+(sumOfPosessions + stableOrFiat)+"<br>");
-                                    res.write("Total Deposits: "+totalDeposits+"<br>");
-                                    res.write("<b>P&L: "+((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
-                                    res.write("("+stableOrFiat+" EURO in Fiat or Stablecoins)<br>");
+                                    res.write("Total Holdings Value: "+myround(sumOfPosessions + stableOrFiat)+"<br>");
+                                    res.write("Total Deposits: "+myround(totalDeposits)+"<br>");
+                                    res.write("<b>P&L: "+myround((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
+                                    res.write("("+myround(stableOrFiat)+" EURO in Fiat or Stablecoins)<br>");
                                     res.write('<a href="\addInterest">Add Interest</a><br>');
                                     res.write('<a href="\addPromo">Add Promo</a><br>');
                                     res.write('<a href="\sepa">SEPA Deposit</a><br>');
@@ -171,7 +175,6 @@ app.get('/', (req,res) => {
                                     res.write('<a href="\showAllInterest">Check all interest</a><br>');
                                     res.write('<a href="\showAllPromos">Check all promos</a><br>');
                                     res.write('<a href="\cardTransfers">Check all card transfers</a><br>');
-                                    //res.write('<a href="\\runSQL">Run SQL query</a><br>');
                                     res.end();
                                 } //end if
                             } //end if not stablecoin
@@ -502,13 +505,14 @@ app.get('/showAllPromos', function (req,res) {
     });
 });
 
-
-/*
 app.get('/runsql', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/runSQL.html'));
 });
 app.post('/sqlquery', function (req,res) {
-    var sql = req.body.sql;
+    var query = req.body.sql;
+    var sql = "SELECT * FROM holdings WHERE id=112;";
+    if(typeof query !== 'undefined' && monthValue )
+        sql = query;
     db.query(sql, function(err,result) {
         if(err) throw err;
         dataInTable(result,res);
@@ -516,8 +520,6 @@ app.post('/sqlquery', function (req,res) {
         res.end();
     });
 });
-*/
-
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
