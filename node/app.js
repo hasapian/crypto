@@ -287,7 +287,7 @@ app.post('/insertPurchase', function (req,res) {
     }
     else {
         sql = "INSERT INTO holdings (coin,amount,wallet,isInterest,date,isPromo,deposit,depositCurrency,price,totalDeposits,fees)"+
-        "VALUES ('"+currency+"',-"+deposit+",'"+wallet+"',false,CURRENT_DATE,false,0,null,null,false,0),"+
+        "VALUES ('"+currency+"',-"+deposit+",'"+wallet+"',false,CURRENT_DATE,false,-"+deposit+",'"+currency+"',null,false,0),"+
         "('"+coin+"',"+(amount-fees)+",'"+wallet+"',false,CURRENT_DATE,false,"+deposit+",'"+currency+"',"+price+",false,"+fees+");"
     }
 	console.log("sql: "+sql);
