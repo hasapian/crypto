@@ -65,7 +65,7 @@ function myround(x) {
 app.get('/', (req,res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type','text/html');
-    res.write("<h1>Crypto</h1>\n");
+    res.write("<h1>Crypto</h1>");
     db.query(sqlCoins, function(err,mycoins) {
         if(err) throw err;
         geckoIndex = 0;
@@ -125,43 +125,34 @@ app.get('/', (req,res) => {
                         myFilltable(result,prices);
                         var sumOfPosessions = 0;
                         for(i=0;i<geckoIds.length;i++) {
+                            sumOfPosessions += holdings[i] * prices.data[geckoIds[i]].eur;
+                        }
+                        res.write("<table style='border:1px solid black'><tr><td><b>Coin</b></td><td><b>Profit</b></td><td><b>Price</b></td><td><b>Portfolio Value</b></td><td>Deposits</td><td>Deposit Percentage</td><td>Holdings</td></tr>");
+                        for(i=0;i<geckoIds.length;i++) {
                             var coinName = getKeyByValue(coinIndexes,i);
                             console.log(coinName);
                             if(!stablecoins.includes(coinName)) {
-                                res.write("\n"+coinName);
-                                res.write("\nDeposits: "+(myround(deposits[i])).toString()+"<br>");
-                                res.write("\nHoldings: "+holdings[i].toString()+"<br>");
                                 geckoprice = prices.data[geckoIds[i]].usd;
                                 geckoprice2 = prices.data[geckoIds[i]].eur;
-                                res.write("\nPrice: "+geckoprice.toString()+"<br>");
+                                var percentage = ((deposits[i]) * 100) / (totalDeposits - stableOrFiat);
                                 var tempValue = holdings[i] * geckoprice2;
                                 values[i] = tempValue;
-                                res.write("\nProfit: "+(myround(tempValue - deposits[i])).toString()+"<br>");
-                                res.write("\n---------<br>");
-                                sumOfPosessions += tempValue;
+                                var percentage2 = (values[i] * 100) / (sumOfPosessions);
+
+                                res.write("<tr><td>"+coinName+"</td>");
+                                res.write("<td style='border:1px solid blue'>"+(myround(tempValue - deposits[i])).toString()+"</td>");       //profit
+                                res.write("<td>"+geckoprice.toString()+"</td>");                                    //price
+                                res.write("<td>"+myround(percentage2)+"%</td>");                                     //portfolio
+                                res.write("<td>"+(myround(deposits[i])).toString()+"</td>");                        //deposits
+                                res.write("<td>"+myround(percentage)+"%</td>");                                      //deposit percentage
+                                res.write("<td>"+holdings[i].toString()+"</td></tr>");                                   //holdings
+                                
                                 if(i==(geckoIds.length-1)) { 
-                                    res.write("Deposits:<br>")
-                                    for(j=0;j<geckoIds.length;j++) {
-                                        coinName = getKeyByValue(coinIndexes,j);
-                                        if(!stablecoins.includes(coinName)) {
-                                            var percentage = ((deposits[j]) * 100) / (totalDeposits - stableOrFiat);
-                                            res.write(coinName+": "+myround(percentage)+"%<br>");
-                                        }
-                                    }
-                                    res.write("---------<br>");
-                                    res.write("Portfolio<br>");
-                                    for(j=0;j<geckoIds.length;j++) {
-                                        coinName = getKeyByValue(coinIndexes,j);
-                                        if(!stablecoins.includes(coinName)) {
-                                            var percentage = (values[j] * 100) / (sumOfPosessions);
-                                            res.write(coinName+": "+myround(percentage)+"%<br>");
-                                        }
-                                    }
-                                    res.write("---------<br>");
-                                    res.write("Total Holdings Value: "+myround(sumOfPosessions + stableOrFiat)+"<br>");
+                                    res.write("</table>")
+                                    res.write("<br>Total Holdings Value: "+myround(sumOfPosessions + stableOrFiat)+"<br>");
                                     res.write("Total Deposits: "+myround(totalDeposits)+"<br>");
                                     res.write("<b>P&L: "+myround((sumOfPosessions + stableOrFiat) - totalDeposits)+"</b><br>");
-                                    res.write("("+myround(stableOrFiat)+" EURO in Fiat or Stablecoins)<br>");
+                                    res.write("("+myround(stableOrFiat)+" EURO in Fiat or Stablecoins)<br><br>");
                                     res.write('<a href="\addInterest">Add Interest</a><br>');
                                     res.write('<a href="\addPromo">Add Promo</a><br>');
                                     res.write('<a href="\sepa">SEPA Deposit</a><br>');
@@ -171,7 +162,6 @@ app.get('/', (req,res) => {
                                     res.write('<a href="\cardTransfer">Transfer to card</a><br>');
                                     res.write('<a href="\cardBack">Transfer from card</a><br>');
                                     res.write('<a href="\interest">Check interest</a><br>');
-                                    res.write('<a href="\holdings">Check all holdings</a><br>');  
                                     res.write('<a href="\showAllInterest">Check all interest</a><br>');
                                     res.write('<a href="\showAllPromos">Check all promos</a><br>');
                                     res.write('<a href="\cardTransfers">Check all card transfers</a><br>');
