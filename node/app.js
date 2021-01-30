@@ -501,7 +501,7 @@ app.get('/runsql', function (req,res) {
 app.post('/sqlquery', function (req,res) {
     var query = req.body.sql;
     var sql = "SELECT * FROM holdings WHERE id=112;";
-    if(typeof query !== 'undefined' && monthValue )
+    if(typeof query !== 'undefined' && query )
         sql = query;
     db.query(sql, function(err,result) {
         if(err) throw err;
