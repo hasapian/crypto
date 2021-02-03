@@ -79,13 +79,14 @@ app.get('/', (req,res) => {
         mycoins.forEach(function(coin) {
             coins.push(coin.coin);
         });
+//	console.log("Coins in DB: "+coins);
         var unfound = [];
         CoinGeckoClient.coins.markets({per_page:[250],page:[1]}).then((markets) => {
             for(j=0;j<coins.length;j++) {
                 i=0;
                 found=false;
                 while((i < markets.data.length) && (found == false)) {
-                    if(markets.data[i].symbol == coins[j].toLowerCase()) {
+                    if((markets.data[i].symbol).toLowerCase() == coins[j].toLowerCase()) {
                         found = true;
                         geckoIds.push(markets.data[i].id);
                         coinIndexes[coins[j]] = geckoIndex;
@@ -104,7 +105,7 @@ app.get('/', (req,res) => {
                     i=0;
                     found=false;
                     while((i < markets2.data.length) && (found == false)) {
-                        if(markets2.data[i].symbol == unfound[j].toLowerCase()) {
+                        if((markets2.data[i].symbol).toLowerCase() == unfound[j].toLowerCase()) {
                             found = true;
                             geckoIds.push(markets2.data[i].id);
                             coinIndexes[unfound[j]] = geckoIndex;
@@ -495,6 +496,7 @@ app.get('/showAllPromos', function (req,res) {
     });
 });
 
+/*
 app.get('/runsql', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/runSQL.html'));
 });
@@ -510,7 +512,7 @@ app.post('/sqlquery', function (req,res) {
         res.end();
     });
 });
-
+*/
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
