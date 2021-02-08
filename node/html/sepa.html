@@ -5,7 +5,7 @@
 </head>
 <body>
 	<form action="/insertSepa" method="POST">
-        <label for="deposit">Enter Deposit (without commission): </label>
+        <label for="deposit">Enter Deposit: </label>
         <input type="text" id="amount" name="amount">
         <select id="wallet" name="wallet">
             <option value="Celsius">Celsius</option>
@@ -14,7 +14,10 @@
             <option value="Binance" selected>Binance</option>
             <option value="Swipe">Swipe</option>
 	    <option value="FTX">FTX</option>
-        </select>
+	    <option value="Coinbase">Coinbase</option>
+        </select><br>
+        <label for="fees">Fees: </label>
+        <input type="text" size="3" id="fees" name="fees">
 		<input type="submit" value="SEPA Deposit">
 	</form>
 </body>
