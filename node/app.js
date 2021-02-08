@@ -11,7 +11,7 @@ const apiKey = 'bf1f6e72-f284-4248-9b91-78625793a01b'
 const client = new CoinMarketCap(apiKey)
 const CoinGeckoClient = new CoinGecko();
 
-const stablecoins = ['USDT','USDC','BUSD'];
+const stablecoins = ['USDT','USDC','BUSD','VAI'];
 const sqlHoldings = "SELECT * FROM holdings"
 const sqlCoins = "SELECT * FROM coins"
 
