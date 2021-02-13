@@ -159,6 +159,7 @@ app.get('/', (req,res) => {
                                     res.write('<a href="\sepa">SEPA Deposit</a><br>');
                                     res.write('<a href="\\buyCrypto">Buy Crypto</a><br>');
                                     res.write('<a href="\sellCrypto">Sell Crypto</a><br>');
+                                    res.write('<a href="\addFee">Insert Fee</a><br>');
                                     res.write('<a href="\\transferCrypto">Transfer Crypto</a><br>');
                                     res.write('<a href="\cardTransfer">Transfer to card</a><br>');
                                     res.write('<a href="\cardBack">Transfer from card</a><br>');
@@ -184,6 +185,10 @@ app.get('/addInterest', function (req,res) {
 
 app.get('/addPromo', function (req,res) {
 	res.sendFile(path.join(__dirname,'./html/addPromo.html'));
+});
+
+app.get('/addFee', function (req,res) {
+	res.sendFile(path.join(__dirname,'./html/fee.html'));
 });
 
 app.get('/buyCrypto', function (req,res) {
@@ -346,6 +351,19 @@ app.post('/insertSell', function (req,res) {
             });
         });
     });
+});
+
+app.post('/insertFee', function (req,res) {
+    var amount = req.body.amount;
+    var coin = req.body.coins;
+    var wallet = req.body.wallet;
+    var sql = "INSERT INTO holdings (coin,amount,wallet,date)"+
+        "VALUES ('"+coin+"',-"+amount+",'"+wallet+"',CURRENT_DATE);"
+	console.log("sql: "+sql);
+	db.query(sql, function (err,result) {
+        if(err) throw err;
+        res.send("Fee updated");
+	});
 });
 
 app.post('/insertCard', function (req,res) {
